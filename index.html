@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChemTrack Lab — Chemical Inventory Manager</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --bg: #ffffff; --bg2: #f7f7f6; --bg3: #f0efeb;
+    --text: #1a1a18; --text2: #666660; --text3: #aaa;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+    --green: #1D9E75; --green-light: #E1F5EE; --green-dark: #0F6E56;
+    --amber-light: #FAEEDA; --amber-text: #854F0B;
+    --red-light: #FCEBEB; --red-text: #A32D2D;
+    --blue-light: #E6F1FB; --blue-text: #185FA5;
+    --gray-light: #F1EFE8; --gray-text: #5F5E5A;
+    --radius: 8px; --radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1c; --bg2: #2a2a28; --bg3: #252523;
+      --text: #e8e8e4; --text2: #999990; --text3: #666;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.18);
+      --green-light: #0a3028; --green-dark: #5DCAA5;
+      --amber-light: #2a1f08; --amber-text: #FAC775;
+      --red-light: #2a0f0f; --red-text: #F09595;
+      --blue-light: #0a1e30; --blue-text: #85B7EB;
+      --gray-light: #252523; --gray-text: #B4B2A9;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); font-size: 14px; min-height: 100vh; }
+  .app { max-width: 900px; margin: 0 auto; background: var(--bg); min-height: 100vh; display: flex; flex-direction: column; box-shadow: 0 0 0 0.5px var(--border); }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 0.5px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 10; }
+  .logo { display: flex; align-items: center; gap: 9px; font-size: 16px; font-weight: 600; }
+  .logo i { color: var(--green); font-size: 22px; }
+  .logo span { font-size: 11px; font-weight: 400; color: var(--text3); margin-left: 2px; }
+  .tabs { display: flex; border-bottom: 0.5px solid var(--border); background: var(--bg); overflow-x: auto; position: sticky; top: 53px; z-index: 9; }
+  .tab { padding: 10px 14px; font-size: 12px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; color: var(--text2); display: flex; align-items: center; gap: 5px; transition: color .15s; user-select: none; }
+  .tab.active { color: var(--green); border-bottom-color: var(--green); font-weight: 500; }
+  .tab:hover:not(.active) { color: var(--text); }
+  .content { flex: 1; }
+  .panel { padding: 16px 18px; display: none; }
+  .panel.active { display: block; }
+
+  /* Forms */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group.full { grid-column: span 2; }
+  label.fl { font-size: 11px; color: var(--text2); font-weight: 500; }
+  input, select, textarea { font-size: 13px; padding: 8px 10px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); width: 100%; font-family: inherit; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(29,158,117,0.12); }
+  textarea { resize: vertical; min-height: 56px; }
+  .chk-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; }
+  .chk-row input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--green); flex-shrink: 0; }
+  .chk-row label { font-size: 13px; cursor: pointer; }
+
+  /* Buttons */
+  .btn { padding: 8px 14px; border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer; border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); display: inline-flex; align-items: center; gap: 6px; transition: background .15s; font-family: inherit; }
+  .btn:hover { background: var(--bg2); }
+  .btn:active { transform: scale(0.98); }
+  .btn.primary { background: var(--green); color: #fff; border-color: var(--green); }
+  .btn.primary:hover { background: var(--green-dark); }
+  .btn.danger { color: var(--red-text); border-color: var(--border); }
+  .btn.sm { padding: 4px 8px; font-size: 11px; }
+  .btn-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; flex-wrap: wrap; }
+
+  /* Scan zone */
+  .scan-zone { border: 1.5px dashed var(--border2); border-radius: var(--radius-lg); padding: 28px 16px; text-align: center; cursor: pointer; transition: all .2s; margin-bottom: 14px; background: var(--bg2); }
+  .scan-zone:hover { border-color: var(--green); background: var(--green-light); }
+  .scan-zone i { font-size: 38px; color: var(--text3); margin-bottom: 8px; display: block; }
+  .scan-zone h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .scan-zone p { color: var(--text2); font-size: 12px; line-height: 1.5; }
+  .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 6px; margin-bottom: 12px; }
+  .preview-img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius); border: 0.5px solid var(--border); }
+  .preview-wrap { position: relative; }
+  .remove-img { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,.7); color: #fff; border: none; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+
+  /* Status */
+  .ai-status { padding: 10px 14px; border-radius: var(--radius); font-size: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; border: 0.5px solid; }
+  .ai-status.loading { background: var(--green-light); color: var(--green-dark); border-color: var(--green); }
+  .ai-status.error { background: var(--red-light); color: var(--red-text); border-color: var(--red-text); }
+  .ai-status.success { background: var(--green-light); color: var(--green-dark); border-color: var(--green); }
+  .spinner { width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Stats */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-bottom: 16px; }
+  .stat-card { background: var(--bg2); border-radius: var(--radius); padding: 12px 14px; }
+  .stat-card .lbl { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
+  .stat-card .val { font-size: 24px; font-weight: 600; }
+  .stat-card .sub { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+  /* Table */
+  .search-row { display: flex; gap: 7px; margin-bottom: 12px; flex-wrap: wrap; }
+  .search-row input { flex: 1; min-width: 140px; }
+  .search-row select { min-width: 100px; }
+  .tbl-wrap { overflow-x: auto; border-radius: var(--radius-lg); border: 0.5px solid var(--border); }
+  .tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .tbl th { text-align: left; padding: 9px 10px; font-size: 10px; font-weight: 600; color: var(--text2); background: var(--bg2); border-bottom: 0.5px solid var(--border); white-space: nowrap; }
+  .tbl td { padding: 9px 10px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:hover td { background: var(--bg2); }
+
+  /* Badges */
+  .badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; white-space: nowrap; }
+  .badge.green { background: var(--green-light); color: var(--green-dark); }
+  .badge.amber { background: var(--amber-light); color: var(--amber-text); }
+  .badge.red { background: var(--red-light); color: var(--red-text); }
+  .badge.blue { background: var(--blue-light); color: var(--blue-text); }
+  .badge.gray { background: var(--gray-light); color: var(--gray-text); }
+
+  /* Sections */
+  .section-head { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 12px; }
+  .card h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .card p { font-size: 12px; color: var(--text2); margin-bottom: 10px; line-height: 1.6; }
+  .list-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 4px 16px; }
+  .list-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+  .list-row:last-child { border-bottom: none; }
+  .empty-state { text-align: center; padding: 48px 16px; color: var(--text2); }
+  .empty-state i { font-size: 36px; margin-bottom: 10px; display: block; color: var(--text3); }
+  .empty-state p { font-size: 13px; }
+
+  /* Modal */
+  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--bg); border-radius: var(--radius-lg); padding: 20px; width: 100%; max-width: 440px; border: 0.5px solid var(--border); }
+  .modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+  /* Checkout */
+  .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--blue-light); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--blue-text); flex-shrink: 0; }
+
+  /* Notification */
+  .notif { position: fixed; bottom: 20px; right: 20px; padding: 10px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 500; z-index: 999; display: flex; align-items: center; gap: 8px; max-width: 300px; border: 0.5px solid; animation: slideUp .25s ease; }
+  .notif.success { background: var(--green-light); color: var(--green-dark); border-color: var(--green); }
+  .notif.error { background: var(--red-light); color: var(--red-text); border-color: var(--red-text); }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* QR */
+  .qr-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+  .qr-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 14px; display: flex; gap: 12px; align-items: flex-start; }
+  .qr-card .info { font-size: 12px; max-width: 180px; }
+  .qr-card .chem-name { font-weight: 600; font-size: 13px; margin-bottom: 6px; }
+
+  /* Info note */
+  .info-note { background: var(--blue-light); border: 0.5px solid var(--blue-text); border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: var(--blue-text); margin-bottom: 14px; line-height: 1.6; display: flex; gap: 8px; align-items: flex-start; }
+  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: var(--blue-text); color: #fff; font-size: 10px; font-weight: 700; margin-right: 4px; flex-shrink: 0; }
+
+  .exp-warn { background: var(--amber-light); border: 0.5px solid var(--amber-text); border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: var(--amber-text); margin-bottom: 14px; display: none; }
+  .freq-bar { height: 4px; background: var(--bg2); border-radius: 2px; margin-top: 4px; overflow: hidden; width: 100px; }
+  .freq-fill { height: 100%; background: var(--green); border-radius: 2px; }
+  code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; background: var(--bg2); padding: 2px 6px; border-radius: 4px; }
+  pre { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; background: var(--bg2); padding: 12px; border-radius: var(--radius); overflow-x: auto; white-space: pre-wrap; color: var(--text2); max-height: 260px; overflow-y: auto; margin-top: 8px; }
+
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .form-group.full { grid-column: span 1; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+    .topbar { padding: 10px 14px; }
+    .panel { padding: 12px 14px; }
+  }
+
+  @media print {
+    .topbar, .tabs, .search-row, .btn-row, .btn { display: none !important; }
+    .qr-grid { display: flex; flex-wrap: wrap; }
+    .qr-card { break-inside: avoid; border: 1px solid #ccc; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="logo">
+      <i class="ti ti-flask" aria-hidden="true"></i>
+      ChemTrack Lab <span>v2.0</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:12px;color:var(--text2)" id="stockCount">0 chemicals</span>
+      <span id="expAlert" class="badge red" style="display:none"><i class="ti ti-alert-triangle" style="font-size:10px" aria-hidden="true"></i> <span id="expAlertNum"></span> expiring</span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('add')"><i class="ti ti-camera" aria-hidden="true"></i> Add</div>
+    <div class="tab" onclick="showTab('inventory')"><i class="ti ti-list" aria-hidden="true"></i> Inventory</div>
+    <div class="tab" onclick="showTab('expiry')"><i class="ti ti-calendar-x" aria-hidden="true"></i> Expiry</div>
+    <div class="tab" onclick="showTab('checkout')"><i class="ti ti-clock" aria-hidden="true"></i> Checkout</div>
+    <div class="tab" onclick="showTab('orders')"><i class="ti ti-refresh" aria-hidden="true"></i> Reorder</div>
+    <div class="tab" onclick="showTab('qr')"><i class="ti ti-qrcode" aria-hidden="true"></i> QR codes</div>
+    <div class="tab" onclick="showTab('settings')"><i class="ti ti-settings" aria-hidden="true"></i> Setup</div>
+  </div>
+
+  <div class="content">
+
+    <!-- ADD -->
+    <div class="panel active" id="panel-add">
+      <div id="gsWarning" class="info-note" style="display:none">
+        <i class="ti ti-info-circle" aria-hidden="true"></i>
+        <span>Google Sheets not connected — data saves locally only. Go to <strong>Setup</strong> to connect your sheet.</span>
+      </div>
+      <div class="scan-zone" onclick="document.getElementById('fileInput').click()">
+        <i class="ti ti-camera-plus" aria-hidden="true"></i>
+        <h3>Take or upload label photos</h3>
+        <p>Add 1–4 photos of the chemical label. AI reads the name, company, catalog #, CAS #, lot #, expiry date, and more.<br>Today's date is auto-set as arrival date.</p>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" multiple capture="environment" onchange="handleImages(this)" style="display:none">
+      <div id="previewGrid" class="preview-grid" style="display:none"></div>
+      <div id="aiStatus" style="display:none"></div>
+      <div id="aiBtn" style="display:none;margin-bottom:12px">
+        <button class="btn primary" onclick="runAI()"><i class="ti ti-wand" aria-hidden="true"></i> Identify with AI</button>
+        <button class="btn" onclick="clearImages()" style="margin-left:6px"><i class="ti ti-trash" aria-hidden="true"></i> Clear photos</button>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group full"><label class="fl">Chemical name *</label><input id="f_name" placeholder="e.g. Ethanol absolute"></div>
+        <div class="form-group"><label class="fl">Company / manufacturer</label><input id="f_company" placeholder="e.g. Sigma-Aldrich"></div>
+        <div class="form-group"><label class="fl">Catalog number</label><input id="f_catalog" placeholder="e.g. E7023" style="font-family:monospace"></div>
+        <div class="form-group"><label class="fl">CAS number</label><input id="f_cas" placeholder="e.g. 64-17-5" style="font-family:monospace"></div>
+        <div class="form-group"><label class="fl">Lot / batch number</label><input id="f_lot" placeholder="e.g. MKCK8088" style="font-family:monospace"></div>
+        <div class="form-group"><label class="fl">Amount / size</label><input id="f_amount" placeholder="e.g. 500 mL"></div>
+        <div class="form-group"><label class="fl">Number of stocks</label><input id="f_stocks" type="number" min="0" placeholder="1"></div>
+        <div class="form-group"><label class="fl">Storage location</label><input id="f_location" placeholder="e.g. Fridge A, Shelf 2"></div>
+        <div class="form-group"><label class="fl">Arrival date</label><input id="f_arrival" type="date"></div>
+        <div class="form-group"><label class="fl">Expiry date</label><input id="f_expiry" type="date"></div>
+        <div class="form-group"><label class="fl">Last order date</label><input id="f_lastorder" type="date"></div>
+        <div class="form-group"><label class="fl">Order frequency</label>
+          <select id="f_freq">
+            <option value="">Unknown</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="quarterly">Quarterly</option>
+            <option value="biannual">Bi-annual</option>
+            <option value="annual">Annual</option>
+            <option value="asneeded">As needed</option>
+          </select>
+        </div>
+        <div class="form-group full"><label class="fl">Notes / hazard codes / purity / grade</label><textarea id="f_notes" placeholder="Safety info, purity %, special handling, hazard codes..."></textarea></div>
+      </div>
+      <div class="chk-row">
+        <input type="checkbox" id="f_opened">
+        <label for="f_opened"><i class="ti ti-package-open" style="font-size:15px;vertical-align:-2px" aria-hidden="true"></i> Already opened</label>
+      </div>
+      <div id="openDateGroup" style="display:none;margin-bottom:10px">
+        <div class="form-group" style="max-width:200px"><label class="fl">Open date</label><input id="f_opendate" type="date"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="clearForm()"><i class="ti ti-x" aria-hidden="true"></i> Clear form</button>
+        <button class="btn primary" onclick="saveChemical()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save chemical</button>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div class="panel" id="panel-inventory">
+      <div class="stat-grid" id="statGrid"></div>
+      <div class="search-row">
+        <input type="text" id="searchInput" placeholder="Search name, CAS, catalog, location, lot..." oninput="renderTable()">
+        <select id="filterLoc" onchange="renderTable()"><option value="">All locations</option></select>
+        <select id="filterStatus" onchange="renderTable()">
+          <option value="">All status</option>
+          <option value="open">Opened</option>
+          <option value="sealed">Sealed</option>
+          <option value="expiring">Expiring soon</option>
+          <option value="expired">Expired</option>
+          <option value="lowstock">Low stock</option>
+        </select>
+        <button class="btn" onclick="exportCSV()"><i class="ti ti-download" aria-hidden="true"></i> CSV</button>
+      </div>
+      <div class="tbl-wrap" id="tableWrap">
+        <div class="empty-state"><i class="ti ti-flask" aria-hidden="true"></i><p>No chemicals yet. Use the Add tab to get started.</p></div>
+      </div>
+    </div>
+
+    <!-- EXPIRY -->
+    <div class="panel" id="panel-expiry">
+      <div id="expiryContent"></div>
+    </div>
+
+    <!-- CHECKOUT -->
+    <div class="panel" id="panel-checkout">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div>
+          <div style="font-size:15px;font-weight:600">Usage / checkout log</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">Track who uses what and when</div>
+        </div>
+        <button class="btn primary" onclick="openCheckoutModal()"><i class="ti ti-plus" aria-hidden="true"></i> Log usage</button>
+      </div>
+      <div id="checkoutList">
+        <div class="empty-state"><i class="ti ti-clock" aria-hidden="true"></i><p>No usage logged yet.</p></div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="panel" id="panel-orders">
+      <div id="ordersList"><div class="empty-state"><i class="ti ti-refresh" aria-hidden="true"></i><p>Set order frequency on chemicals to see reorder schedule.</p></div></div>
+    </div>
+
+    <!-- QR -->
+    <div class="panel" id="panel-qr">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Generate QR labels for chemical bottles. Scanning the code shows all chemical details. Use "Print all" to create a full sheet of labels.</p>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <select id="qrSelect" style="flex:1;min-width:180px" onchange="generateQR()"><option value="">Select a chemical...</option></select>
+        <button class="btn" onclick="window.print()"><i class="ti ti-printer" aria-hidden="true"></i> Print</button>
+        <button class="btn primary" onclick="generateAllQR()"><i class="ti ti-qrcode" aria-hidden="true"></i> Print all QR labels</button>
+      </div>
+      <div id="qrOutput" class="qr-grid"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="panel" id="panel-settings">
+      <div class="section-head">Google Sheets sync</div>
+      <div class="card">
+        <h4><i class="ti ti-table" aria-hidden="true"></i> Apps Script web app URL</h4>
+        <p>All entries sync to a shared Google Sheet that your whole team can view. Creates two tabs: <code>Chemicals</code> and <code>Checkout Log</code>.</p>
+        <div style="margin-bottom:10px"><input id="gsUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec"></div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <button class="btn primary" onclick="saveGsUrl()"><i class="ti ti-plug" aria-hidden="true"></i> Connect</button>
+          <button class="btn" onclick="syncAll()"><i class="ti ti-upload" aria-hidden="true"></i> Sync all data now</button>
+        </div>
+      </div>
+
+      <div class="section-head" style="margin-top:16px">Google Sheets setup guide</div>
+      <div class="card">
+        <p style="line-height:2">
+          <span class="step-num">1</span> Open <a href="https://sheets.google.com" target="_blank" style="color:var(--blue-text)">sheets.google.com</a> → create a new blank spreadsheet<br>
+          <span class="step-num">2</span> Go to <strong>Extensions → Apps Script</strong><br>
+          <span class="step-num">3</span> Delete existing code → paste the script below<br>
+          <span class="step-num">4</span> Click <strong>Deploy → New deployment → Web app</strong><br>
+          <span class="step-num">5</span> Execute as: <strong>Me</strong> &nbsp;|&nbsp; Who has access: <strong>Anyone</strong><br>
+          <span class="step-num">6</span> Copy the URL → paste above → Connect
+        </p>
+        <button class="btn" onclick="toggleScript()" id="scriptToggleBtn"><i class="ti ti-code" aria-hidden="true"></i> Show Apps Script code</button>
+        <pre id="scriptBlock" style="display:none"></pre>
+      </div>
+
+      <div class="section-head" style="margin-top:16px">AI label reading</div>
+      <div class="card">
+        <h4><i class="ti ti-robot" aria-hidden="true"></i> Anthropic API key</h4>
+        <p>Powers photo-based label identification. Your key stays in your browser only — never sent anywhere except Anthropic's API. Get a key at <a href="https://console.anthropic.com" target="_blank" style="color:var(--blue-text)">console.anthropic.com</a>.</p>
+        <div style="margin-bottom:10px"><input id="apiKey" type="password" placeholder="sk-ant-api03-..."></div>
+        <button class="btn primary" onclick="saveApiKey()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save key</button>
+      </div>
+
+      <div class="section-head" style="margin-top:16px">Expiry alert window</div>
+      <div class="card">
+        <p>Flag chemicals as "expiring soon" this many days before their expiry date.</p>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+          <input type="number" id="expThresh" value="90" min="1" max="365" style="width:80px">
+          <span style="color:var(--text2);font-size:13px">days before expiry</span>
+          <button class="btn primary" onclick="saveThresh()"><i class="ti ti-check" aria-hidden="true"></i> Save</button>
+        </div>
+      </div>
+
+      <div class="section-head" style="margin-top:16px">Data management</div>
+      <div class="card">
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <button class="btn" onclick="exportCSV()"><i class="ti ti-download" aria-hidden="true"></i> Export CSV</button>
+          <button class="btn" onclick="exportJSON()"><i class="ti ti-download" aria-hidden="true"></i> Export backup (JSON)</button>
+          <button class="btn danger" onclick="clearAll()"><i class="ti ti-trash" aria-hidden="true"></i> Clear all local data</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal-bg" id="coModal">
+  <div class="modal">
+    <h3><i class="ti ti-clock" style="color:var(--green)" aria-hidden="true"></i> Log chemical usage</h3>
+    <div class="form-grid">
+      <div class="form-group full"><label class="fl">Chemical *</label><select id="co_chem"><option value="">Select...</option></select></div>
+      <div class="form-group full"><label class="fl">Your name *</label><input id="co_user" placeholder="First Last"></div>
+      <div class="form-group"><label class="fl">Amount used</label><input id="co_amount" placeholder="e.g. 10 mL"></div>
+      <div class="form-group"><label class="fl">Date &amp; time</label><input id="co_date" type="datetime-local"></div>
+      <div class="form-group full"><label class="fl">Purpose / experiment</label><input id="co_purpose" placeholder="e.g. Western blot buffer prep"></div>
+      <div class="form-group full"><label class="fl">Notes</label><input id="co_notes" placeholder="Observations, remaining amount..."></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="saveCheckout()"><i class="ti ti-check" aria-hidden="true"></i> Log usage</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var chemicals = JSON.parse(localStorage.getItem('chemtrack_v2')||'[]');
+var checkouts = JSON.parse(localStorage.getItem('chemtrack_co')||'[]');
+var images = [];
+var today = new Date().toISOString().slice(0,10);
+
+function getThresh(){ return parseInt(localStorage.getItem('chemtrack_thresh')||'90'); }
+
+var TABS = ['add','inventory','expiry','checkout','orders','qr','settings'];
+function showTab(t){
+  document.querySelectorAll('.tab').forEach(function(el,i){ el.classList.toggle('active', TABS[i]===t); });
+  document.querySelectorAll('.panel').forEach(function(el){ el.classList.remove('active'); });
+  document.getElementById('panel-'+t).classList.add('active');
+  if(t==='inventory') renderAll();
+  if(t==='expiry') renderExpiry();
+  if(t==='orders') renderOrders();
+  if(t==='checkout') renderCheckout();
+  if(t==='qr') populateQRSelect();
+  if(t==='settings') loadSettings();
+}
+
+document.getElementById('f_opened').onchange = function(){
+  document.getElementById('openDateGroup').style.display = this.checked?'block':'none';
+  if(this.checked && !document.getElementById('f_opendate').value)
+    document.getElementById('f_opendate').value = today;
+};
+
+function handleImages(inp){
+  if(!inp.files.length) return;
+  var files = Array.from(inp.files).slice(0,4);
+  images = [];
+  var pg = document.getElementById('previewGrid');
+  pg.innerHTML = ''; pg.style.display = 'grid';
+  if(!document.getElementById('f_arrival').value) document.getElementById('f_arrival').value = today;
+  var pending = files.length;
+  files.forEach(function(f,i){
+    var r = new FileReader();
+    r.onload = function(e){
+      images[i] = e.target.result;
+      var wrap = document.createElement('div'); wrap.className = 'preview-wrap';
+      var img = document.createElement('img'); img.src = e.target.result; img.className = 'preview-img';
+      var btn = document.createElement('button'); btn.className = 'remove-img'; btn.innerHTML = '×';
+      btn.onclick = function(){ images.splice(i,1,null); wrap.remove(); };
+      wrap.appendChild(img); wrap.appendChild(btn); pg.appendChild(wrap);
+      if(--pending===0) document.getElementById('aiBtn').style.display='block';
+    };
+    r.readAsDataURL(f);
+  });
+  inp.value='';
+}
+
+function clearImages(){
+  images=[]; document.getElementById('previewGrid').innerHTML='';
+  document.getElementById('previewGrid').style.display='none';
+  document.getElementById('aiBtn').style.display='none';
+  document.getElementById('aiStatus').style.display='none';
+}
+
+function setStatus(msg,type){
+  var el=document.getElementById('aiStatus');
+  el.style.display='flex'; el.className='ai-status '+type;
+  el.innerHTML=(type==='loading'?'<div class="spinner"></div>':'<i class="ti ti-'+(type==='success'?'check':'alert-circle')+'" aria-hidden="true"></i>')+'<span>'+msg+'</span>';
+}
+
+async function runAI(){
+  var key=localStorage.getItem('chemtrack_apikey');
+  if(!key){ showTab('settings'); notify('Add your Anthropic API key in Setup first.','error'); return; }
+  var imgs=images.filter(Boolean);
+  if(!imgs.length){ notify('Add photos first.','error'); return; }
+  setStatus('Reading label with AI...','loading');
+  var content=imgs.map(function(b64){
+    var m=b64.split(',')[0].match(/:(.*?);/);
+    return {type:'image',source:{type:'base64',media_type:m?m[1]:'image/jpeg',data:b64.split(',')[1]}};
+  });
+  content.push({type:'text',text:'You are a lab chemical label reader. Extract information from these label photos and return ONLY valid JSON (no markdown backticks, no preamble):\n{\n  "name": "full chemical name",\n  "company": "manufacturer name",\n  "catalog": "catalog or product number",\n  "cas": "CAS number",\n  "lot": "lot or batch number if visible",\n  "amount": "size e.g. 500mL or 100g",\n  "expiry": "expiry date as YYYY-MM-DD if visible else null",\n  "notes": "purity grade hazard codes any other label info"\n}'});
+  try{
+    var res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-opus-4-5',max_tokens:600,messages:[{role:'user',content:content}]})
+    });
+    var data=await res.json();
+    if(data.error) throw new Error(data.error.message);
+    var txt=data.content[0].text.trim().replace(/```json|```/g,'').trim();
+    var info=JSON.parse(txt);
+    ['name','company','catalog','cas','lot','amount','notes'].forEach(function(k){
+      if(info[k]) document.getElementById('f_'+k).value=info[k];
+    });
+    if(info.expiry) document.getElementById('f_expiry').value=info.expiry;
+    setStatus('Done! Review the fields below and fill in anything missing.','success');
+  }catch(e){ setStatus('Error: '+e.message,'error'); }
+}
+
+function saveChemical(){
+  var name=document.getElementById('f_name').value.trim();
+  if(!name){ notify('Chemical name is required.','error'); return; }
+  var chem={
+    id:Date.now(), name:name,
+    company:document.getElementById('f_company').value.trim(),
+    catalog:document.getElementById('f_catalog').value.trim(),
+    cas:document.getElementById('f_cas').value.trim(),
+    lot:document.getElementById('f_lot').value.trim(),
+    amount:document.getElementById('f_amount').value.trim(),
+    stocks:parseInt(document.getElementById('f_stocks').value)||1,
+    location:document.getElementById('f_location').value.trim(),
+    arrival:document.getElementById('f_arrival').value||today,
+    expiry:document.getElementById('f_expiry').value,
+    lastOrder:document.getElementById('f_lastorder').value,
+    freq:document.getElementById('f_freq').value,
+    notes:document.getElementById('f_notes').value.trim(),
+    opened:document.getElementById('f_opened').checked,
+    openDate:document.getElementById('f_opendate').value,
+    added:new Date().toISOString()
+  };
+  chemicals.push(chem); save();
+  syncRow(chem,'addChem');
+  notify('Chemical saved!','success');
+  clearForm(); clearImages(); updateCount();
+}
+
+function clearForm(){
+  ['f_name','f_company','f_catalog','f_cas','f_lot','f_amount','f_stocks','f_location','f_arrival','f_expiry','f_lastorder','f_notes','f_opendate'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('f_freq').value='';
+  document.getElementById('f_opened').checked=false;
+  document.getElementById('openDateGroup').style.display='none';
+  document.getElementById('aiStatus').style.display='none';
+}
+
+function save(){ localStorage.setItem('chemtrack_v2',JSON.stringify(chemicals)); }
+function saveCO(){ localStorage.setItem('chemtrack_co',JSON.stringify(checkouts)); }
+
+function expiryStatus(c){
+  if(!c.expiry) return 'none';
+  var diff=Math.round((new Date(c.expiry)-new Date())/86400000);
+  if(diff<0) return 'expired';
+  if(diff<=getThresh()) return 'expiring';
+  return 'ok';
+}
+
+function expiryBadge(c){
+  var s=expiryStatus(c);
+  if(s==='expired') return '<span class="badge red"><i class="ti ti-alert-triangle" style="font-size:9px" aria-hidden="true"></i> Expired</span>';
+  if(s==='expiring'){
+    var d=Math.round((new Date(c.expiry)-new Date())/86400000);
+    return '<span class="badge amber">'+d+'d left</span>';
+  }
+  if(s==='ok') return '<span class="badge green">'+c.expiry+'</span>';
+  return '<span class="badge gray">—</span>';
+}
+
+function updateCount(){
+  var expCount=chemicals.filter(function(c){ var s=expiryStatus(c); return s==='expired'||s==='expiring'; }).length;
+  document.getElementById('stockCount').textContent=chemicals.length+' chemical'+(chemicals.length!==1?'s':'');
+  document.getElementById('expAlert').style.display=expCount?'inline-flex':'none';
+  if(expCount) document.getElementById('expAlertNum').textContent=expCount;
+  document.getElementById('gsWarning').style.display=localStorage.getItem('chemtrack_gsurl')?'none':'flex';
+}
+
+function renderAll(){ updateCount(); renderStats(); renderTable(); renderLocFilter(); }
+
+function renderStats(){
+  var opened=chemicals.filter(function(c){return c.opened;}).length;
+  var locs=[...new Set(chemicals.map(function(c){return c.location||'';}))].filter(Boolean).length;
+  var low=chemicals.filter(function(c){return c.stocks<=1;}).length;
+  var exp=chemicals.filter(function(c){ var s=expiryStatus(c); return s==='expired'||s==='expiring'; }).length;
+  document.getElementById('statGrid').innerHTML=
+    st(chemicals.length,'Total chemicals','')+st(opened,'Opened','bottles')+
+    st(exp,'Expiry alerts',getThresh()+'d window')+st(low,'Low stock','≤1 unit');
+}
+function st(v,l,s){ return '<div class="stat-card"><div class="lbl">'+l+'</div><div class="val">'+v+'</div>'+(s?'<div class="sub">'+s+'</div>':'')+'</div>'; }
+
+function renderLocFilter(){
+  var locs=[...new Set(chemicals.map(function(c){return c.location;}).filter(Boolean))].sort();
+  var sel=document.getElementById('filterLoc'), cur=sel.value;
+  sel.innerHTML='<option value="">All locations</option>'+locs.map(function(l){return '<option'+(l===cur?' selected':'')+'>'+l+'</option>';}).join('');
+}
+
+function renderTable(){
+  var q=document.getElementById('searchInput').value.toLowerCase();
+  var loc=document.getElementById('filterLoc').value;
+  var fs=document.getElementById('filterStatus').value;
+  var data=chemicals.filter(function(c){
+    var m=!q||[c.name,c.cas,c.catalog,c.company,c.location,c.lot].some(function(v){return v&&v.toLowerCase().includes(q);});
+    var lm=!loc||c.location===loc;
+    var sm=true;
+    if(fs==='open') sm=c.opened;
+    if(fs==='sealed') sm=!c.opened;
+    if(fs==='expiring') sm=expiryStatus(c)==='expiring';
+    if(fs==='expired') sm=expiryStatus(c)==='expired';
+    if(fs==='lowstock') sm=c.stocks<=1;
+    return m&&lm&&sm;
+  });
+  var wrap=document.getElementById('tableWrap');
+  if(!data.length){ wrap.innerHTML='<div class="empty-state"><i class="ti ti-search" aria-hidden="true"></i><p>'+(chemicals.length?'No results match your filters.':'No chemicals yet. Use the Add tab.')+'</p></div>'; return; }
+  wrap.innerHTML='<table class="tbl">'+
+    '<thead><tr><th style="width:20%">Name</th><th style="width:13%">Company</th><th style="width:9%;font-family:monospace">Catalog</th><th style="width:9%;font-family:monospace">CAS</th><th style="width:8%">Amount</th><th style="width:6%">Stock</th><th style="width:10%">Location</th><th style="width:8%">Arrival</th><th style="width:10%">Expiry</th><th style="width:7%">Actions</th></tr></thead>'+
+    '<tbody>'+data.map(function(c){
+      var stb=c.stocks<=0?'<span class="badge red">Out</span>':c.stocks===1?'<span class="badge amber">1</span>':'<span class="badge blue">'+c.stocks+'</span>';
+      var opb=c.opened?'<span class="badge amber" style="font-size:9px;margin-left:3px">Open</span>':'';
+      return '<tr>'+
+        '<td><strong>'+esc(c.name)+'</strong>'+opb+'</td>'+
+        '<td>'+esc(c.company||'—')+'</td>'+
+        '<td style="font-family:monospace;font-size:11px">'+esc(c.catalog||'—')+'</td>'+
+        '<td style="font-family:monospace;font-size:11px">'+esc(c.cas||'—')+'</td>'+
+        '<td>'+esc(c.amount||'—')+'</td>'+
+        '<td>'+stb+'</td>'+
+        '<td>'+esc(c.location||'—')+'</td>'+
+        '<td style="font-size:11px">'+esc(c.arrival||'—')+'</td>'+
+        '<td>'+expiryBadge(c)+'</td>'+
+        '<td style="white-space:nowrap">'+
+          '<button class="btn sm" onclick="editChem('+c.id+')" title="Edit"><i class="ti ti-edit" aria-hidden="true"></i></button> '+
+          '<button class="btn sm" onclick="showQRFor('+c.id+')" title="QR"><i class="ti ti-qrcode" aria-hidden="true"></i></button> '+
+          '<button class="btn sm danger" onclick="deleteChem('+c.id+')" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></button>'+
+        '</td></tr>';
+    }).join('')+'</tbody></table>';
+}
+
+function renderExpiry(){
+  var thresh=getThresh(), now=new Date();
+  var groups={expired:[],expiring:[],ok:[],none:[]};
+  chemicals.forEach(function(c){ groups[expiryStatus(c)].push(c); });
+  groups.expired.sort(function(a,b){return a.expiry.localeCompare(b.expiry);});
+  groups.expiring.sort(function(a,b){return a.expiry.localeCompare(b.expiry);});
+  groups.ok.sort(function(a,b){return a.expiry.localeCompare(b.expiry);});
+  var html='';
+  if(!chemicals.length){ html='<div class="empty-state"><i class="ti ti-calendar-x" aria-hidden="true"></i><p>No chemicals added yet.</p></div>'; }
+  else {
+    if(groups.expired.length) html+=expSection('Expired — action required',groups.expired,'red',now);
+    if(groups.expiring.length) html+=expSection('Expiring within '+thresh+' days',groups.expiring,'amber',now);
+    if(groups.ok.length) html+=expSection('Good standing',groups.ok,'green',now);
+    if(groups.none.length) html+=expSection('No expiry date recorded',groups.none,'gray',now);
+  }
+  document.getElementById('expiryContent').innerHTML=html;
+}
+
+function expSection(title,items,color,now){
+  return '<div class="section-head">'+title+' ('+items.length+')</div>'+
+    '<div class="list-card" style="margin-bottom:14px">'+
+    items.map(function(c){
+      var diff=c.expiry?Math.round((new Date(c.expiry)-now)/86400000):null;
+      var label=diff===null?'No date':diff<0?'Expired '+(Math.abs(diff))+'d ago':diff===0?'Expires today':'Expires in '+diff+'d';
+      return '<div class="list-row">'+
+        '<div style="flex:1">'+
+        '<div style="font-weight:600;font-size:13px">'+esc(c.name)+'</div>'+
+        '<div style="font-size:11px;color:var(--text2);margin-top:2px">'+esc(c.company||'')+(c.catalog?' · '+c.catalog:'')+(c.lot?' · Lot '+c.lot:'')+(c.location?' · '+c.location:'')+'</div>'+
+        '</div>'+
+        '<div style="text-align:right;flex-shrink:0;margin-left:10px">'+
+        '<span class="badge '+color+'">'+label+'</span>'+
+        '<div style="font-size:10px;color:var(--text3);margin-top:3px">Exp: '+(c.expiry||'—')+'  ·  Stock: '+c.stocks+'</div>'+
+        '</div></div>';
+    }).join('')+'</div>';
+}
+
+function openCheckoutModal(){
+  var sel=document.getElementById('co_chem');
+  sel.innerHTML='<option value="">Select chemical...</option>'+chemicals.map(function(c){return '<option value="'+c.id+'">'+esc(c.name)+(c.catalog?' ('+c.catalog+')':'')+'</option>';}).join('');
+  document.getElementById('co_date').value=new Date().toISOString().slice(0,16);
+  ['co_user','co_amount','co_purpose','co_notes'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('coModal').classList.add('open');
+}
+function closeModal(){ document.getElementById('coModal').classList.remove('open'); }
+document.getElementById('coModal').addEventListener('click',function(e){ if(e.target===this) closeModal(); });
+
+function saveCheckout(){
+  var chemId=parseInt(document.getElementById('co_chem').value);
+  var user=document.getElementById('co_user').value.trim();
+  if(!chemId||!user){ notify('Select a chemical and enter your name.','error'); return; }
+  var chem=chemicals.find(function(c){return c.id===chemId;});
+  var co={
+    id:Date.now(), chemId:chemId, chemName:chem?chem.name:'',
+    user:user, amount:document.getElementById('co_amount').value.trim(),
+    date:document.getElementById('co_date').value,
+    purpose:document.getElementById('co_purpose').value.trim(),
+    notes:document.getElementById('co_notes').value.trim()
+  };
+  checkouts.unshift(co); saveCO();
+  syncRow(co,'addCheckout');
+  closeModal(); renderCheckout();
+  notify('Usage logged for '+esc(chem?chem.name:'chemical')+'!','success');
+}
+
+function renderCheckout(){
+  if(!checkouts.length){ document.getElementById('checkoutList').innerHTML='<div class="empty-state"><i class="ti ti-clock" aria-hidden="true"></i><p>No usage logged yet. Click "Log usage" to start.</p></div>'; return; }
+  var html='<div class="list-card">';
+  checkouts.slice(0,100).forEach(function(co){
+    var initials=co.user.split(' ').map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2);
+    var dt=co.date?new Date(co.date).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+    html+='<div class="list-row">'+
+      '<div class="avatar">'+initials+'</div>'+
+      '<div style="flex:1">'+
+      '<div style="font-weight:600;font-size:13px">'+esc(co.chemName)+'</div>'+
+      '<div style="font-size:12px;color:var(--text2)">'+esc(co.user)+(co.amount?' · '+co.amount:'')+(co.purpose?' · '+co.purpose:'')+'</div>'+
+      '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+dt+'</div>'+
+      '</div>'+
+      '<button class="btn sm danger" onclick="deleteCheckout('+co.id+')" title="Delete"><i class="ti ti-x" aria-hidden="true"></i></button>'+
+      '</div>';
+  });
+  html+='</div>';
+  if(checkouts.length>100) html+='<p style="font-size:11px;color:var(--text3);text-align:center;padding:8px">Showing latest 100 of '+checkouts.length+' entries</p>';
+  document.getElementById('checkoutList').innerHTML=html;
+}
+function deleteCheckout(id){ checkouts=checkouts.filter(function(c){return c.id!==id;}); saveCO(); renderCheckout(); }
+
+function renderOrders(){
+  var fd={weekly:7,monthly:30,quarterly:90,biannual:180,annual:365};
+  var with0=chemicals.filter(function(c){return c.freq||c.lastOrder;});
+  if(!with0.length){ document.getElementById('ordersList').innerHTML='<div class="empty-state"><i class="ti ti-refresh" aria-hidden="true"></i><p>Set "Order frequency" and "Last order date" on chemicals to see the reorder schedule.</p></div>'; return; }
+  var now=new Date();
+  var sorted=with0.slice().sort(function(a,b){return dueIn(a,fd,now)-dueIn(b,fd,now);});
+  document.getElementById('ordersList').innerHTML=
+    '<div class="section-head">Reorder schedule — sorted by urgency</div>'+
+    '<div class="list-card">'+
+    sorted.map(function(c){
+      var due=dueIn(c,fd,now);
+      var pct=c.freq?Math.max(0,Math.min(100,100-(due/fd[c.freq]*100))):0;
+      var urg=due<7?'red':due<30?'amber':'green';
+      return '<div class="list-row">'+
+        '<div style="flex:1">'+
+        '<div style="font-weight:600;font-size:13px">'+esc(c.name)+'</div>'+
+        '<div style="font-size:11px;color:var(--text2)">'+esc(c.company||'')+(c.catalog?' · '+c.catalog:'')+(c.freq?' · '+c.freq:'')+'</div>'+
+        '<div class="freq-bar"><div class="freq-fill" style="width:'+Math.round(pct)+'%"></div></div>'+
+        '</div>'+
+        '<div style="text-align:right;margin-left:12px;flex-shrink:0">'+
+        '<span class="badge '+urg+'">'+dueLabel(due)+'</span>'+
+        '<div style="font-size:10px;color:var(--text3);margin-top:3px">Last order: '+(c.lastOrder||'—')+'</div>'+
+        '<div style="font-size:10px;color:var(--text3)">Stock: '+c.stocks+'</div>'+
+        '</div></div>';
+    }).join('')+'</div>';
+}
+function dueIn(c,fd,now){ if(!c.lastOrder||!c.freq||!fd[c.freq]) return 9999; return Math.round((new Date(c.lastOrder).getTime()+fd[c.freq]*86400000-now)/86400000); }
+function dueLabel(d){ if(d<0) return 'Overdue '+Math.abs(d)+'d'; if(d===0) return 'Due today'; if(d<30) return 'In '+d+'d'; return 'In ~'+Math.round(d/30)+'mo'; }
+
+function populateQRSelect(){
+  document.getElementById('qrSelect').innerHTML='<option value="">Select a chemical...</option>'+chemicals.map(function(c){return '<option value="'+c.id+'">'+esc(c.name)+(c.catalog?' ('+c.catalog+')':'')+'</option>';}).join('');
+}
+
+function generateQR(){
+  var id=parseInt(document.getElementById('qrSelect').value);
+  document.getElementById('qrOutput').innerHTML='';
+  if(!id) return;
+  var c=chemicals.find(function(x){return x.id===id;}); if(!c) return;
+  makeQRCard(c, document.getElementById('qrOutput'));
+}
+
+function showQRFor(id){ showTab('qr'); setTimeout(function(){ document.getElementById('qrSelect').value=id; generateQR(); },120); }
+
+function makeQRCard(c, container){
+  var text='ChemTrack\nName: '+c.name+'\nCAS: '+(c.cas||'—')+'\nCatalog: '+(c.catalog||'—')+'\nCompany: '+(c.company||'—')+'\nLot: '+(c.lot||'—')+'\nAmount: '+(c.amount||'—')+'\nLocation: '+(c.location||'—')+'\nExpiry: '+(c.expiry||'—')+'\nArrival: '+(c.arrival||'—')+'\nID: '+c.id;
+  var card=document.createElement('div'); card.className='qr-card';
+  var qrDiv=document.createElement('div'); qrDiv.id='qr_'+c.id+'_'+Date.now();
+  qrDiv.style.flexShrink='0';
+  card.appendChild(qrDiv);
+  var info=document.createElement('div'); info.className='info';
+  info.innerHTML='<div class="chem-name">'+esc(c.name)+'</div>'+
+    [['Company',c.company],['Catalog',c.catalog],['CAS',c.cas],['Lot',c.lot],
+     ['Amount',c.amount],['Location',c.location],['Expiry',c.expiry],['Arrival',c.arrival]]
+    .filter(function(r){return r[1];})
+    .map(function(r){return '<div style="margin-bottom:3px"><span style="color:var(--text2)">'+r[0]+':</span> '+esc(r[1])+'</div>';}).join('');
+  card.appendChild(info);
+  container.appendChild(card);
+  try{ new QRCode(qrDiv,{text:text,width:110,height:110,correctLevel:QRCode.CorrectLevel.M}); }catch(e){}
+}
+
+function generateAllQR(){
+  if(!chemicals.length){ notify('No chemicals to generate QR codes for.','error'); return; }
+  var out=document.getElementById('qrOutput'); out.innerHTML='';
+  chemicals.forEach(function(c){ makeQRCard(c, out); });
+}
+
+function editChem(id){
+  var c=chemicals.find(function(x){return x.id===id;}); if(!c) return;
+  showTab('add');
+  var map={name:'f_name',company:'f_company',catalog:'f_catalog',cas:'f_cas',lot:'f_lot',amount:'f_amount',stocks:'f_stocks',location:'f_location',arrival:'f_arrival',expiry:'f_expiry',lastOrder:'f_lastorder',notes:'f_notes',openDate:'f_opendate'};
+  Object.keys(map).forEach(function(k){ document.getElementById(map[k]).value=c[k]||''; });
+  document.getElementById('f_freq').value=c.freq||'';
+  document.getElementById('f_opened').checked=!!c.opened;
+  document.getElementById('openDateGroup').style.display=c.opened?'block':'none';
+  deleteChem(id,true);
+  notify('Editing "'+c.name+'" — fill in and resave.','success');
+}
+
+function deleteChem(id,silent){
+  chemicals=chemicals.filter(function(c){return c.id!==id;}); save(); updateCount();
+  if(!silent){ renderTable(); renderStats(); notify('Chemical deleted.','success'); }
+}
+
+function exportCSV(){
+  var h=['Name','Company','Catalog','CAS','Lot','Amount','Stocks','Location','Arrival','Expiry','Opened','Open Date','Last Order','Frequency','Notes'];
+  var rows=chemicals.map(function(c){
+    return [c.name,c.company,c.catalog,c.cas,c.lot,c.amount,c.stocks,c.location,c.arrival,c.expiry,c.opened?'Yes':'No',c.openDate,c.lastOrder,c.freq,c.notes].map(function(v){return '"'+(v||'').toString().replace(/"/g,'""')+'"';}).join(',');
+  });
+  dl('chemtrack_'+today+'.csv','data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(','),...rows].join('\n')));
+}
+
+function exportJSON(){
+  dl('chemtrack_backup_'+today+'.json','data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify({chemicals:chemicals,checkouts:checkouts},null,2)));
+}
+
+function dl(name,href){ var a=document.createElement('a'); a.href=href; a.download=name; a.click(); }
+
+function clearAll(){
+  if(!confirm('Delete ALL local data? This cannot be undone.')) return;
+  chemicals=[]; checkouts=[]; save(); saveCO(); updateCount(); notify('All local data cleared.','success');
+}
+
+async function syncRow(data,action){
+  var url=localStorage.getItem('chemtrack_gsurl'); if(!url) return;
+  try{ await fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:action,data:data})}); }catch(e){}
+}
+
+async function syncAll(){
+  var url=localStorage.getItem('chemtrack_gsurl');
+  if(!url){ notify('Connect Google Sheets first.','error'); return; }
+  notify('Syncing '+chemicals.length+' chemicals...','success');
+  for(var i=0;i<chemicals.length;i++){ await syncRow(chemicals[i],'addChem'); }
+  for(var j=0;j<checkouts.length;j++){ await syncRow(checkouts[j],'addCheckout'); }
+  notify('Sync complete!','success');
+}
+
+function saveGsUrl(){ var v=document.getElementById('gsUrl').value.trim(); localStorage.setItem('chemtrack_gsurl',v); notify('Sheets URL saved!','success'); updateCount(); }
+function saveApiKey(){ var v=document.getElementById('apiKey').value.trim(); if(v){ localStorage.setItem('chemtrack_apikey',v); notify('API key saved.','success'); } }
+function saveThresh(){ localStorage.setItem('chemtrack_thresh',document.getElementById('expThresh').value); notify('Threshold saved.','success'); updateCount(); }
+
+function loadSettings(){
+  var url=localStorage.getItem('chemtrack_gsurl'); if(url) document.getElementById('gsUrl').value=url;
+  var key=localStorage.getItem('chemtrack_apikey'); if(key) document.getElementById('apiKey').value=key;
+  var t=localStorage.getItem('chemtrack_thresh'); if(t) document.getElementById('expThresh').value=t;
+}
+
+function toggleScript(){
+  var el=document.getElementById('scriptBlock');
+  var btn=document.getElementById('scriptToggleBtn');
+  if(el.style.display==='none'){
+    el.style.display='block'; el.textContent=APPS_SCRIPT;
+    btn.innerHTML='<i class="ti ti-code" aria-hidden="true"></i> Hide script';
+  } else {
+    el.style.display='none';
+    btn.innerHTML='<i class="ti ti-code" aria-hidden="true"></i> Show Apps Script code';
+  }
+}
+
+var APPS_SCRIPT = `function doPost(e) {
+  var data = JSON.parse(e.postData.contents);
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  if (data.action === 'addChem') {
+    var sheet = ss.getSheetByName('Chemicals') || ss.insertSheet('Chemicals');
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(['ID','Name','Company','Catalog','CAS','Lot','Amount','Stocks',
+        'Location','Arrival','Expiry','Opened','Open Date','Last Order','Frequency','Notes','Added']);
+    }
+    var d = data.data || {};
+    sheet.appendRow([d.id,d.name,d.company,d.catalog,d.cas,d.lot,d.amount,d.stocks,
+      d.location,d.arrival,d.expiry,d.opened?'Yes':'No',d.openDate,
+      d.lastOrder,d.freq,d.notes,new Date().toISOString()]);
+  }
+
+  if (data.action === 'addCheckout') {
+    var co = ss.getSheetByName('Checkout Log') || ss.insertSheet('Checkout Log');
+    if (co.getLastRow() === 0) {
+      co.appendRow(['ID','Chemical','User','Amount Used','Date/Time','Purpose','Notes','Logged At']);
+    }
+    var c = data.data || {};
+    co.appendRow([c.id,c.chemName,c.user,c.amount,c.date,c.purpose,c.notes,new Date().toISOString()]);
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify({status:'ok'}))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+
+function notify(msg,type){
+  var n=document.createElement('div'); n.className='notif '+type;
+  n.innerHTML='<i class="ti ti-'+(type==='success'?'check':'alert-circle')+'" aria-hidden="true"></i>'+msg;
+  document.body.appendChild(n);
+  setTimeout(function(){n.style.opacity='0';n.style.transition='opacity .3s';setTimeout(function(){n.remove();},300);},3000);
+}
+
+function esc(s){ return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):''; }
+
+updateCount();
+</script>
+</body>
+</html>
