@@ -5,12 +5,12 @@
 It's a self-contained web app that runs entirely in your browser — no server needed. Data is saved locally in your browser's storage, and optionally synced to a shared Google Sheet that your whole team can view.
 
 
-# Step 1 — Save the app as an HTML file
-To deploy this for real: Click the download/copy button on the app widget, save it as chemtrack.html on your computer
+## Step 1 — Save the app as an HTML file
+To deploy this for real: Download the index.html, save it as it is or change its name (maybe LabInventory.html) on your computer
 That's a fully working app — you can open it in any browser right now
 
 
-# Step 2 — Get your Anthropic API key (for photo AI)
+## Step 2 — Get your Anthropic API key (for photo AI)
 
 Go to console.anthropic.com → sign up or log in
 Go to "API Keys" → create a new key
@@ -20,7 +20,7 @@ In the app → Setup tab → paste it under "Anthropic API key" → Save
 This is what powers the label-reading feature. Each photo scan costs roughly $0.01–0.03.
 
 
-# Step 3 — Set up Google Sheets (for the shared team database)
+## Step 3 — Set up Google Sheets (for the shared team database)
 
 Go to sheets.google.com → create a new blank spreadsheet
 In that spreadsheet, go to Extensions → Apps Script
@@ -34,13 +34,13 @@ Click Sync all data now to push any existing chemicals up
 From this point, every chemical and every checkout log entry automatically posts a new row to your Google Sheet in real time.
 
 
-# Step 4 — Share it with your 100 people
-You have a few good options depending on your lab's setup:
+## Step 4 — Share it with your people
+
 The simplest option is to host the HTML file somewhere your team can reach it. You can put it on Google Drive and share the link (they open it, then "Open with" → browser), or host it for free on GitHub Pages or Netlify by uploading the single file. Anyone with the link opens the same app, and everyone's entries go into the same Google Sheet.
 If you want everyone to see the live inventory (not just add to it), just share the Google Sheet link directly — it's a normal spreadsheet they can filter, sort, and view without needing the app.
 
 
-# Day-to-day workflow for your team
+## Day-to-day workflow for your team
 When a new chemical arrives, one person opens the app, takes 1–4 photos of the label, hits "Identify with AI," reviews the auto-filled fields, and clicks Save. That's about 30 seconds per chemical.
 When someone takes a chemical from the shelf, they go to the Checkout log tab, hit "Log usage," pick the chemical, enter their name and how much they used. This keeps a full audit trail of who used what.
 The Expiry tab flags anything expiring within 90 days (adjustable) so you can reorder before you run out. The Reorder tab shows which chemicals are due for ordering based on your order frequency settings.
