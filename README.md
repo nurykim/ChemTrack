@@ -13,11 +13,10 @@ That's a fully working app — you can open it in any browser right now
 ## Step 2 — Get your Anthropic API key (for photo AI)
 
 Go to console.anthropic.com → sign up or log in
-Go to "API Keys" → create a new key
-Copy it (starts with sk-ant-...)
-In the app → Setup tab → paste it under "Anthropic API key" → Save
+Go to "API Keys" → create a new key → Copy it (starts with sk-ant-...)
 
-This is what powers the label-reading feature. Each photo scan costs roughly $0.01–0.03.
+In the app → Setup tab → paste it under "Anthropic API key" → Save
+(This is what powers the label-reading feature. Each photo scan costs roughly $0.01–0.03)
 
 
 ## Step 3 — Set up Google Sheets (for the shared team database)
