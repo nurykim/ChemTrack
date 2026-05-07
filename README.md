@@ -1,5 +1,4 @@
-# LabInventory
-## Lab inventory management 
+# LabInventory: Lab inventory management 
 
 
 ## What this app actually is
