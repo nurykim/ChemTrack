@@ -365,6 +365,28 @@
   </div>
 </div>
 
+<!-- DUPLICATE WARNING MODAL -->
+<div class="modal-bg" id="dupModal">
+  <div class="modal" style="max-width:500px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--amber-light);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <i class="ti ti-alert-triangle" style="color:var(--amber-text);font-size:18px" aria-hidden="true"></i>
+      </div>
+      <div>
+        <h3 style="font-size:15px;font-weight:600;margin:0">Possible duplicate detected</h3>
+        <p style="font-size:12px;color:var(--text2);margin:0">A chemical with a similar name already exists in your inventory.</p>
+      </div>
+    </div>
+    <div id="dupList" style="margin:14px 0;display:flex;flex-direction:column;gap:8px"></div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:14px">Is this a new stock of an existing chemical, or a genuinely different chemical?</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+      <button class="btn" onclick="closeDupModal()"><i class="ti ti-x" aria-hidden="true"></i> Cancel — go back</button>
+      <button class="btn" onclick="incrementExistingStock()" id="dupAddStockBtn" style="display:none"><i class="ti ti-plus" aria-hidden="true"></i> Add stock to existing</button>
+      <button class="btn primary" onclick="forceSaveChemical()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save as new entry anyway</button>
+    </div>
+  </div>
+</div>
+
 <!-- CHECKOUT MODAL -->
 <div class="modal-bg" id="coModal">
   <div class="modal">
@@ -477,10 +499,12 @@ async function runAI(){
   }catch(e){ setStatus('Error: '+e.message,'error'); }
 }
 
-function saveChemical(){
+var _pendingChem = null;
+
+function buildChemObj(){
   var name=document.getElementById('f_name').value.trim();
-  if(!name){ notify('Chemical name is required.','error'); return; }
-  var chem={
+  if(!name){ notify('Chemical name is required.','error'); return null; }
+  return {
     id:Date.now(), name:name,
     company:document.getElementById('f_company').value.trim(),
     catalog:document.getElementById('f_catalog').value.trim(),
@@ -498,10 +522,113 @@ function saveChemical(){
     openDate:document.getElementById('f_opendate').value,
     added:new Date().toISOString()
   };
+}
+
+function findDuplicates(name, cas, catalog){
+  var q=name.toLowerCase().trim();
+  return chemicals.filter(function(c){
+    // Exact name match
+    if(c.name.toLowerCase().trim()===q) return true;
+    // CAS match (if both have it)
+    if(cas && c.cas && c.cas.replace(/\s/g,'')===cas.replace(/\s/g,'')) return true;
+    // Catalog match (if both have it)
+    if(catalog && c.catalog && c.catalog.toLowerCase()===catalog.toLowerCase()) return true;
+    // Fuzzy: one name contains the other (catches "Ethanol" vs "Ethanol absolute")
+    if(c.name.toLowerCase().includes(q) || q.includes(c.name.toLowerCase())) return true;
+    return false;
+  });
+}
+
+function saveChemical(){
+  var chem=buildChemObj(); if(!chem) return;
+  var dups=findDuplicates(chem.name, chem.cas, chem.catalog);
+  if(dups.length>0){
+    _pendingChem=chem;
+    showDupModal(dups, dups.length===1);
+    return;
+  }
+  commitSave(chem);
+}
+
+function forceSaveChemical(){
+  if(_pendingChem){ commitSave(_pendingChem); _pendingChem=null; }
+  closeDupModal();
+}
+
+function commitSave(chem){
   chemicals.push(chem); save();
   syncRow(chem,'addChem');
-  notify('Chemical saved!','success');
+  notify('"'+esc(chem.name)+'" saved!','success');
   clearForm(); clearImages(); updateCount();
+}
+
+function showDupModal(dups, single){
+  var list=document.getElementById('dupList');
+  list.innerHTML=dups.map(function(c){
+    var expS=expiryStatus(c);
+    var expBadge=expS==='expired'?'<span class="badge red">Expired</span>':expS==='expiring'?'<span class="badge amber">Expiring</span>':'';
+    var opBadge=c.opened?'<span class="badge amber">Opened</span>':'<span class="badge green">Sealed</span>';
+    return '<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px 14px">'+
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px">'+
+        '<div style="font-weight:600;font-size:14px">'+esc(c.name)+'</div>'+
+        '<div style="display:flex;gap:4px;flex-shrink:0">'+opBadge+' '+expBadge+'</div>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:12px">'+
+        dupRow('Company',c.company)+dupRow('Catalog',c.catalog)+
+        dupRow('CAS',c.cas)+dupRow('Lot',c.lot)+
+        dupRow('Amount',c.amount)+dupRow('Stocks',c.stocks)+
+        dupRow('Location',c.location)+dupRow('Arrival',c.arrival)+
+        dupRow('Expiry',c.expiry||'—')+dupRow('Open date',c.openDate||'—')+
+      '</div>'+
+      (c.notes?'<div style="margin-top:6px;font-size:11px;color:var(--text2);border-top:0.5px solid var(--border);padding-top:6px">'+esc(c.notes)+'</div>':'')+
+      '<div style="margin-top:8px;display:flex;gap:6px">'+
+        '<button class="btn sm" onclick="editChem('+c.id+');closeDupModal()"><i class="ti ti-edit" aria-hidden="true"></i> Edit this entry</button>'+
+        '<button class="btn sm" onclick="jumpToInventory('+c.id+')"><i class="ti ti-list" aria-hidden="true"></i> View in inventory</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+  // Show "Add stock" button only when there's exactly one exact match
+  var exactMatch=dups.length===1?dups[0]:null;
+  var addBtn=document.getElementById('dupAddStockBtn');
+  if(exactMatch){ addBtn.style.display='inline-flex'; addBtn.dataset.id=exactMatch.id; }
+  else { addBtn.style.display='none'; }
+  document.getElementById('dupModal').classList.add('open');
+}
+
+function dupRow(k,v){ return v?'<div><span style="color:var(--text2)">'+k+':</span> <strong>'+esc(String(v))+'</strong></div>':''; }
+
+function closeDupModal(){ document.getElementById('dupModal').classList.remove('open'); _pendingChem=null; }
+document.getElementById('dupModal').addEventListener('click',function(e){ if(e.target===this) closeDupModal(); });
+
+function incrementExistingStock(){
+  var id=parseInt(document.getElementById('dupAddStockBtn').dataset.id);
+  var c=chemicals.find(function(x){return x.id===id;}); if(!c) return;
+  var addQty=(_pendingChem&&_pendingChem.stocks)||1;
+  c.stocks=(c.stocks||0)+addQty;
+  // Also update lot/arrival if provided in the new entry
+  if(_pendingChem){
+    if(_pendingChem.lot) c.lot=_pendingChem.lot;
+    if(_pendingChem.arrival) c.arrival=_pendingChem.arrival;
+    if(_pendingChem.expiry) c.expiry=_pendingChem.expiry;
+  }
+  save(); syncRow(c,'addChem');
+  notify('Stock updated to '+c.stocks+' for "'+esc(c.name)+'".','success');
+  clearForm(); clearImages(); updateCount();
+  _pendingChem=null;
+  closeDupModal();
+}
+
+function jumpToInventory(id){
+  closeDupModal();
+  showTab('inventory');
+  setTimeout(function(){
+    var c=chemicals.find(function(x){return x.id===id;}); if(!c) return;
+    document.getElementById('searchInput').value=c.name;
+    renderTable();
+    // Briefly highlight
+    var rows=document.querySelectorAll('.tbl tbody tr');
+    rows.forEach(function(r){ if(r.textContent.includes(c.name)){ r.style.background='var(--amber-light)'; setTimeout(function(){r.style.background='';},2000); } });
+  },150);
 }
 
 function clearForm(){
