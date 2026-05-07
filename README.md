@@ -41,8 +41,11 @@ If you want everyone to see the live inventory (not just add to it), just share 
 
 ## Day-to-day workflow for your team
 When a new chemical arrives, one person opens the app, takes 1–4 photos of the label, hits "Identify with AI," reviews the auto-filled fields, and clicks Save. That's about 30 seconds per chemical.
+
 When someone takes a chemical from the shelf, they go to the Checkout log tab, hit "Log usage," pick the chemical, enter their name and how much they used. This keeps a full audit trail of who used what.
+
 The Expiry tab flags anything expiring within 90 days (adjustable) so you can reorder before you run out. The Reorder tab shows which chemicals are due for ordering based on your order frequency settings.
+
 For the physical bottles, use the QR tab to print labels — stick one on each bottle, and anyone can scan it with their phone camera to instantly see all the chemical's details.
 
 
