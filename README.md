@@ -49,7 +49,7 @@ The Expiry tab flags anything expiring within 90 days (adjustable) so you can re
 For the physical bottles, use the QR tab to print labels — stick one on each bottle, and anyone can scan it with their phone camera to instantly see all the chemical's details.
 
 
-### For duplicates, it will trigger:
+## For duplicates, it will trigger:
 - Exact name match — "Ethanol" typed again when "Ethanol" already exists
 - Fuzzy name match — "Ethanol absolute" when "Ethanol" exists, or vice versa
 - CAS number match — same CAS number even if the name is spelled differently
@@ -62,4 +62,4 @@ For the physical bottles, use the QR tab to print labels — stick one on each b
 - Save as new entry anyway — bypasses the warning and saves it as a separate entry (useful for same chemical from different suppliers or different grades)
 
 
-* coded by Claude.ai
+### coded by Claude.ai
