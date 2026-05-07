@@ -6,9 +6,7 @@ It's a self-contained web app that runs entirely in your browser — no server n
 
 
 # Step 1 — Save the app as an HTML file
-The app above is interactive but lives inside this chat. To deploy this for real:
-
-Click the download/copy button on the app widget, save it as chemtrack.html on your computer
+To deploy this for real: Click the download/copy button on the app widget, save it as chemtrack.html on your computer
 That's a fully working app — you can open it in any browser right now
 
 
