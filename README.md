@@ -51,14 +51,21 @@ For the physical bottles, use the QR tab to print labels — stick one on each b
 
 ## For duplicates, it will trigger:
 Exact name match — "Ethanol" typed again when "Ethanol" already exists
+
 Fuzzy name match — "Ethanol absolute" when "Ethanol" exists, or vice versa
+
 CAS number match — same CAS number even if the name is spelled differently
+
 Catalog number match — same catalog # from any company
 
 ### Three action choices:
 Edit this entry — jumps straight into editing the existing chemical
+
 View in inventory — goes to inventory tab with that chemical highlighted in amber
+
 Add stock to existing — increments the stock count on the existing entry (also updates lot/arrival/expiry from the new scan if provided), then discards the duplicate form
+
 Save as new entry anyway — bypasses the warning and saves it as a separate entry (useful for same chemical from different suppliers or different grades)
+
 
 - coded by Claude.ai
