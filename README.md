@@ -75,7 +75,7 @@ Also, there's a **Checkout / use log**: a full log of who used what, how much, w
 ### Notes
 - Regularly check that chemical stocks are being managed properly.
 - Keep the `index.html` file online if you or your teammates need shared access, such as through Google Drive. Changes made to a downloaded local copy will only be visible on your own computer.
-- As you may have noticed, this app can be used by anyone to manage almost anything. PubChem and SDS features may not apply, but the app will still function normally.
+- As you may have noticed, this app can be used by anyone to manage almost anything, like 50ml tubes. PubChem and SDS features may not apply, but the app will still function normally.
 
 ---
 ### coded by Claude.ai
