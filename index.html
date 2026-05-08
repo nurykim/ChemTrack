@@ -4,9 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ChemTrack Lab — Chemical Inventory Manager</title>
+<!-- Tabler Icons CDN -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<!-- QRCode.js CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
+  /* ── CSS Variables (Light & Dark theme) ─────────────────────────────── */
   :root {
     --bg: #ffffff; --bg2: #f7f7f6; --bg3: #f0efeb;
     --text: #1a1a18; --text2: #666660; --text3: #aaa;
@@ -30,13 +33,19 @@
       --gray-light: #252523; --gray-text: #B4B2A9;
     }
   }
+
+  /* ── Reset & Base ───────────────────────────────────────────────────── */
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); font-size: 14px; min-height: 100vh; }
   .app { max-width: 900px; margin: 0 auto; background: var(--bg); min-height: 100vh; display: flex; flex-direction: column; box-shadow: 0 0 0 0.5px var(--border); }
+
+  /* ── Top bar ────────────────────────────────────────────────────────── */
   .topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 0.5px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 10; }
   .logo { display: flex; align-items: center; gap: 9px; font-size: 16px; font-weight: 600; }
   .logo i { color: var(--green); font-size: 22px; }
   .logo span { font-size: 11px; font-weight: 400; color: var(--text3); margin-left: 2px; }
+
+  /* ── Tab navigation ─────────────────────────────────────────────────── */
   .tabs { display: flex; border-bottom: 0.5px solid var(--border); background: var(--bg); overflow-x: auto; position: sticky; top: 53px; z-index: 9; }
   .tab { padding: 10px 14px; font-size: 12px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; color: var(--text2); display: flex; align-items: center; gap: 5px; transition: color .15s; user-select: none; }
   .tab.active { color: var(--green); border-bottom-color: var(--green); font-weight: 500; }
@@ -45,7 +54,7 @@
   .panel { padding: 16px 18px; display: none; }
   .panel.active { display: block; }
 
-  /* Forms */
+  /* ── Forms ──────────────────────────────────────────────────────────── */
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
   .form-group { display: flex; flex-direction: column; gap: 4px; }
   .form-group.full { grid-column: span 2; }
@@ -57,7 +66,7 @@
   .chk-row input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--green); flex-shrink: 0; }
   .chk-row label { font-size: 13px; cursor: pointer; }
 
-  /* Buttons */
+  /* ── Buttons ────────────────────────────────────────────────────────── */
   .btn { padding: 8px 14px; border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer; border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); display: inline-flex; align-items: center; gap: 6px; transition: background .15s; font-family: inherit; }
   .btn:hover { background: var(--bg2); }
   .btn:active { transform: scale(0.98); }
@@ -67,7 +76,7 @@
   .btn.sm { padding: 4px 8px; font-size: 11px; }
   .btn-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; flex-wrap: wrap; }
 
-  /* Scan zone */
+  /* ── Scan / photo zone ──────────────────────────────────────────────── */
   .scan-zone { border: 1.5px dashed var(--border2); border-radius: var(--radius-lg); padding: 28px 16px; text-align: center; cursor: pointer; transition: all .2s; margin-bottom: 14px; background: var(--bg2); }
   .scan-zone:hover { border-color: var(--green); background: var(--green-light); }
   .scan-zone i { font-size: 38px; color: var(--text3); margin-bottom: 8px; display: block; }
@@ -78,7 +87,7 @@
   .preview-wrap { position: relative; }
   .remove-img { position: absolute; top: 3px; right: 3px; background: rgba(0,0,0,.7); color: #fff; border: none; border-radius: 50%; width: 18px; height: 18px; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; }
 
-  /* Status */
+  /* ── AI status bar ──────────────────────────────────────────────────── */
   .ai-status { padding: 10px 14px; border-radius: var(--radius); font-size: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; border: 0.5px solid; }
   .ai-status.loading { background: var(--green-light); color: var(--green-dark); border-color: var(--green); }
   .ai-status.error { background: var(--red-light); color: var(--red-text); border-color: var(--red-text); }
@@ -86,14 +95,14 @@
   .spinner { width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; flex-shrink: 0; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Stats */
+  /* ── Stat cards (inventory overview) ───────────────────────────────── */
   .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin-bottom: 16px; }
   .stat-card { background: var(--bg2); border-radius: var(--radius); padding: 12px 14px; }
   .stat-card .lbl { font-size: 11px; color: var(--text2); margin-bottom: 4px; }
   .stat-card .val { font-size: 24px; font-weight: 600; }
   .stat-card .sub { font-size: 10px; color: var(--text3); margin-top: 2px; }
 
-  /* Table */
+  /* ── Inventory table ────────────────────────────────────────────────── */
   .search-row { display: flex; gap: 7px; margin-bottom: 12px; flex-wrap: wrap; }
   .search-row input { flex: 1; min-width: 140px; }
   .search-row select { min-width: 100px; }
@@ -104,7 +113,7 @@
   .tbl tr:last-child td { border-bottom: none; }
   .tbl tr:hover td { background: var(--bg2); }
 
-  /* Badges */
+  /* ── Badges ─────────────────────────────────────────────────────────── */
   .badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; white-space: nowrap; }
   .badge.green { background: var(--green-light); color: var(--green-dark); }
   .badge.amber { background: var(--amber-light); color: var(--amber-text); }
@@ -112,7 +121,7 @@
   .badge.blue { background: var(--blue-light); color: var(--blue-text); }
   .badge.gray { background: var(--gray-light); color: var(--gray-text); }
 
-  /* Sections */
+  /* ── Section headings & cards ───────────────────────────────────────── */
   .section-head { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
   .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 12px; }
   .card h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
@@ -124,45 +133,66 @@
   .empty-state i { font-size: 36px; margin-bottom: 10px; display: block; color: var(--text3); }
   .empty-state p { font-size: 13px; }
 
-  /* Modal */
-  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
+  /* ── Modals ─────────────────────────────────────────────────────────── */
+  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 100; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; }
   .modal-bg.open { display: flex; }
   .modal { background: var(--bg); border-radius: var(--radius-lg); padding: 20px; width: 100%; max-width: 440px; border: 0.5px solid var(--border); }
   .modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
 
-  /* Checkout */
+  /* ── Checkout log avatar ────────────────────────────────────────────── */
   .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--blue-light); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--blue-text); flex-shrink: 0; }
 
-  /* Notification */
-  .notif { position: fixed; bottom: 20px; right: 20px; padding: 10px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 500; z-index: 999; display: flex; align-items: center; gap: 8px; max-width: 300px; border: 0.5px solid; animation: slideUp .25s ease; }
+  /* ── Toast notifications ────────────────────────────────────────────── */
+  .notif { position: fixed; bottom: 20px; right: 20px; padding: 10px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 500; z-index: 9999; display: flex; align-items: center; gap: 8px; max-width: 300px; border: 0.5px solid; animation: slideUp .25s ease; }
   .notif.success { background: var(--green-light); color: var(--green-dark); border-color: var(--green); }
   .notif.error { background: var(--red-light); color: var(--red-text); border-color: var(--red-text); }
   @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-  /* QR */
+  /* ── QR codes ───────────────────────────────────────────────────────── */
   .qr-grid { display: flex; flex-wrap: wrap; gap: 10px; }
   .qr-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 14px; display: flex; gap: 12px; align-items: flex-start; }
   .qr-card .info { font-size: 12px; max-width: 180px; }
   .qr-card .chem-name { font-weight: 600; font-size: 13px; margin-bottom: 6px; }
 
-  /* Info note */
+  /* ── Info notes & steps ─────────────────────────────────────────────── */
   .info-note { background: var(--blue-light); border: 0.5px solid var(--blue-text); border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: var(--blue-text); margin-bottom: 14px; line-height: 1.6; display: flex; gap: 8px; align-items: flex-start; }
   .step-num { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: var(--blue-text); color: #fff; font-size: 10px; font-weight: 700; margin-right: 4px; flex-shrink: 0; }
 
-  .exp-warn { background: var(--amber-light); border: 0.5px solid var(--amber-text); border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: var(--amber-text); margin-bottom: 14px; display: none; }
+  /* ── Reorder frequency bar ──────────────────────────────────────────── */
   .freq-bar { height: 4px; background: var(--bg2); border-radius: 2px; margin-top: 4px; overflow: hidden; width: 100px; }
   .freq-fill { height: 100%; background: var(--green); border-radius: 2px; }
+
+  /* ── Code blocks (Apps Script display) ─────────────────────────────── */
   code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; background: var(--bg2); padding: 2px 6px; border-radius: 4px; }
   pre { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; background: var(--bg2); padding: 12px; border-radius: var(--radius); overflow-x: auto; white-space: pre-wrap; color: var(--text2); max-height: 260px; overflow-y: auto; margin-top: 8px; }
 
+  /* ── Datasheet / SDS link buttons ───────────────────────────────────── */
+  /* Green = verified via PubChem API. Amber = constructed URL, not confirmed. */
+  .link-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border-radius: 6px; font-size: 11px; font-weight: 600; text-decoration: none; border: 0.5px solid; cursor: pointer; transition: opacity .15s; white-space: nowrap; }
+  .link-btn:hover { opacity: 0.75; }
+  .link-btn.verified { background: var(--green-light); color: var(--green-dark); border-color: var(--green); }
+  .link-btn.unverified { background: var(--amber-light); color: var(--amber-text); border-color: var(--amber-text); }
+
+  /* ── Chemical detail modal ──────────────────────────────────────────── */
+  .detail-modal { max-width: 560px; max-height: 88vh; overflow-y: auto; }
+  .detail-section { margin-bottom: 14px; }
+  .detail-section-title { font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 0.5px solid var(--border); }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+  .detail-item .k { font-size: 10px; color: var(--text2); margin-bottom: 2px; }
+  .detail-item .v { font-size: 13px; font-weight: 500; }
+  .detail-item .v.mono { font-family: monospace; font-size: 12px; }
+
+  /* ── Responsive (mobile) ────────────────────────────────────────────── */
   @media (max-width: 600px) {
     .form-grid { grid-template-columns: 1fr; }
     .form-group.full { grid-column: span 1; }
     .stat-grid { grid-template-columns: 1fr 1fr; }
     .topbar { padding: 10px 14px; }
     .panel { padding: 12px 14px; }
+    .detail-grid { grid-template-columns: 1fr; }
   }
 
+  /* ── Print styles (QR label sheet) ─────────────────────────────────── */
   @media print {
     .topbar, .tabs, .search-row, .btn-row, .btn { display: none !important; }
     .qr-grid { display: flex; flex-wrap: wrap; }
@@ -172,17 +202,23 @@
 </head>
 <body>
 <div class="app">
+
+  <!-- ── Top bar ──────────────────────────────────────────────────────── -->
   <div class="topbar">
     <div class="logo">
       <i class="ti ti-flask" aria-hidden="true"></i>
-      ChemTrack Lab <span>v2.0</span>
+      ChemTrack Lab <span>v2.1</span>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
       <span style="font-size:12px;color:var(--text2)" id="stockCount">0 chemicals</span>
-      <span id="expAlert" class="badge red" style="display:none"><i class="ti ti-alert-triangle" style="font-size:10px" aria-hidden="true"></i> <span id="expAlertNum"></span> expiring</span>
+      <span id="expAlert" class="badge red" style="display:none">
+        <i class="ti ti-alert-triangle" style="font-size:10px" aria-hidden="true"></i>
+        <span id="expAlertNum"></span> expiring
+      </span>
     </div>
   </div>
 
+  <!-- ── Tab bar ──────────────────────────────────────────────────────── -->
   <div class="tabs">
     <div class="tab active" onclick="showTab('add')"><i class="ti ti-camera" aria-hidden="true"></i> Add</div>
     <div class="tab" onclick="showTab('inventory')"><i class="ti ti-list" aria-hidden="true"></i> Inventory</div>
@@ -195,25 +231,40 @@
 
   <div class="content">
 
-    <!-- ADD -->
+    <!-- ════════════════════════════════════════════════════════════════
+         ADD CHEMICAL panel
+         - Photo upload → AI label reading → form fill
+         - Default arrival date = today (set on first photo added)
+         - Duplicate detection fires on Save
+    ════════════════════════════════════════════════════════════════ -->
     <div class="panel active" id="panel-add">
+      <!-- Warning shown when Google Sheets URL not configured -->
       <div id="gsWarning" class="info-note" style="display:none">
         <i class="ti ti-info-circle" aria-hidden="true"></i>
-        <span>Google Sheets not connected — data saves locally only. Go to <strong>Setup</strong> to connect your sheet.</span>
+        <span>Google Sheets not connected — data saves locally only. Go to <strong>Setup</strong> to connect.</span>
       </div>
+
+      <!-- Photo upload drop zone -->
       <div class="scan-zone" onclick="document.getElementById('fileInput').click()">
         <i class="ti ti-camera-plus" aria-hidden="true"></i>
         <h3>Take or upload label photos</h3>
-        <p>Add 1–4 photos of the chemical label. AI reads the name, company, catalog #, CAS #, lot #, expiry date, and more.<br>Today's date is auto-set as arrival date.</p>
+        <p>Add 1–4 photos of the chemical label. AI reads name, company, catalog #, CAS #, lot #, expiry, and more.<br>Today's date is auto-set as arrival date when you add photos.</p>
       </div>
       <input type="file" id="fileInput" accept="image/*" multiple capture="environment" onchange="handleImages(this)" style="display:none">
+
+      <!-- Photo preview thumbnails (shown after images are added) -->
       <div id="previewGrid" class="preview-grid" style="display:none"></div>
+
+      <!-- AI status bar (loading / success / error) -->
       <div id="aiStatus" style="display:none"></div>
-      <div id="aiBtn" style="display:none;margin-bottom:12px">
+
+      <!-- AI identify button (shown after images are added) -->
+      <div id="aiBtn" style="display:none; margin-bottom:12px">
         <button class="btn primary" onclick="runAI()"><i class="ti ti-wand" aria-hidden="true"></i> Identify with AI</button>
         <button class="btn" onclick="clearImages()" style="margin-left:6px"><i class="ti ti-trash" aria-hidden="true"></i> Clear photos</button>
       </div>
 
+      <!-- Chemical data entry form -->
       <div class="form-grid">
         <div class="form-group full"><label class="fl">Chemical name *</label><input id="f_name" placeholder="e.g. Ethanol absolute"></div>
         <div class="form-group"><label class="fl">Company / manufacturer</label><input id="f_company" placeholder="e.g. Sigma-Aldrich"></div>
@@ -237,22 +288,35 @@
             <option value="asneeded">As needed</option>
           </select>
         </div>
-        <div class="form-group full"><label class="fl">Notes / hazard codes / purity / grade</label><textarea id="f_notes" placeholder="Safety info, purity %, special handling, hazard codes..."></textarea></div>
+        <div class="form-group full"><label class="fl">Notes / hazard codes / purity / grade</label>
+          <textarea id="f_notes" placeholder="Safety info, purity %, special handling, GHS hazard codes..."></textarea>
+        </div>
       </div>
+
+      <!-- Opened checkbox — reveals open date field when checked -->
       <div class="chk-row">
         <input type="checkbox" id="f_opened">
         <label for="f_opened"><i class="ti ti-package-open" style="font-size:15px;vertical-align:-2px" aria-hidden="true"></i> Already opened</label>
       </div>
-      <div id="openDateGroup" style="display:none;margin-bottom:10px">
-        <div class="form-group" style="max-width:200px"><label class="fl">Open date</label><input id="f_opendate" type="date"></div>
+      <div id="openDateGroup" style="display:none; margin-bottom:10px">
+        <div class="form-group" style="max-width:200px">
+          <label class="fl">Open date</label>
+          <input id="f_opendate" type="date">
+        </div>
       </div>
+
       <div class="btn-row">
         <button class="btn" onclick="clearForm()"><i class="ti ti-x" aria-hidden="true"></i> Clear form</button>
         <button class="btn primary" onclick="saveChemical()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save chemical</button>
       </div>
     </div>
 
-    <!-- INVENTORY -->
+    <!-- ════════════════════════════════════════════════════════════════
+         INVENTORY panel
+         - Stats overview cards
+         - Searchable / filterable table
+         - Each row has: Details (opens modal with links), Edit, Delete
+    ════════════════════════════════════════════════════════════════ -->
     <div class="panel" id="panel-inventory">
       <div class="stat-grid" id="statGrid"></div>
       <div class="search-row">
@@ -273,17 +337,25 @@
       </div>
     </div>
 
-    <!-- EXPIRY -->
+    <!-- ════════════════════════════════════════════════════════════════
+         EXPIRY panel
+         - Groups chemicals into: Expired / Expiring soon / Good / No date
+         - Threshold (days) configurable in Setup
+    ════════════════════════════════════════════════════════════════ -->
     <div class="panel" id="panel-expiry">
       <div id="expiryContent"></div>
     </div>
 
-    <!-- CHECKOUT -->
+    <!-- ════════════════════════════════════════════════════════════════
+         CHECKOUT LOG panel
+         - Who used what, how much, when, for what experiment
+         - Syncs to "Checkout Log" tab in Google Sheets
+    ════════════════════════════════════════════════════════════════ -->
     <div class="panel" id="panel-checkout">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
         <div>
           <div style="font-size:15px;font-weight:600">Usage / checkout log</div>
-          <div style="font-size:12px;color:var(--text2);margin-top:2px">Track who uses what and when</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">Track who uses what, when, and for which experiment</div>
         </div>
         <button class="btn primary" onclick="openCheckoutModal()"><i class="ti ti-plus" aria-hidden="true"></i> Log usage</button>
       </div>
@@ -292,14 +364,24 @@
       </div>
     </div>
 
-    <!-- ORDERS -->
+    <!-- ════════════════════════════════════════════════════════════════
+         REORDER panel
+         - Sorted by urgency based on last order date + frequency
+         - Red = overdue, Amber = due within 30d, Green = fine
+    ════════════════════════════════════════════════════════════════ -->
     <div class="panel" id="panel-orders">
-      <div id="ordersList"><div class="empty-state"><i class="ti ti-refresh" aria-hidden="true"></i><p>Set order frequency on chemicals to see reorder schedule.</p></div></div>
+      <div id="ordersList">
+        <div class="empty-state"><i class="ti ti-refresh" aria-hidden="true"></i><p>Set order frequency on chemicals to see the reorder schedule.</p></div>
+      </div>
     </div>
 
-    <!-- QR -->
+    <!-- ════════════════════════════════════════════════════════════════
+         QR CODES panel
+         - Generate per-chemical QR label (encoded chemical info)
+         - "Print all" for a full sheet to stick on bottles
+    ════════════════════════════════════════════════════════════════ -->
     <div class="panel" id="panel-qr">
-      <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Generate QR labels for chemical bottles. Scanning the code shows all chemical details. Use "Print all" to create a full sheet of labels.</p>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Generate QR code labels for bottles. Scanning shows all chemical details. Use "Print all" for a full label sheet.</p>
       <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
         <select id="qrSelect" style="flex:1;min-width:180px" onchange="generateQR()"><option value="">Select a chemical...</option></select>
         <button class="btn" onclick="window.print()"><i class="ti ti-printer" aria-hidden="true"></i> Print</button>
@@ -308,12 +390,18 @@
       <div id="qrOutput" class="qr-grid"></div>
     </div>
 
-    <!-- SETTINGS -->
+    <!-- ════════════════════════════════════════════════════════════════
+         SETUP panel
+         - Google Sheets URL (Apps Script web app)
+         - Anthropic API key (for photo AI)
+         - Expiry alert threshold
+         - Data export / clear
+    ════════════════════════════════════════════════════════════════ -->
     <div class="panel" id="panel-settings">
       <div class="section-head">Google Sheets sync</div>
       <div class="card">
         <h4><i class="ti ti-table" aria-hidden="true"></i> Apps Script web app URL</h4>
-        <p>All entries sync to a shared Google Sheet that your whole team can view. Creates two tabs: <code>Chemicals</code> and <code>Checkout Log</code>.</p>
+        <p>Syncs every chemical entry and checkout log row to a shared Google Sheet. Creates two tabs automatically: <code>Chemicals</code> and <code>Checkout Log</code>.</p>
         <div style="margin-bottom:10px"><input id="gsUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec"></div>
         <div style="display:flex;gap:7px;flex-wrap:wrap">
           <button class="btn primary" onclick="saveGsUrl()"><i class="ti ti-plug" aria-hidden="true"></i> Connect</button>
@@ -323,22 +411,24 @@
 
       <div class="section-head" style="margin-top:16px">Google Sheets setup guide</div>
       <div class="card">
-        <p style="line-height:2">
+        <p style="line-height:2.1">
           <span class="step-num">1</span> Open <a href="https://sheets.google.com" target="_blank" style="color:var(--blue-text)">sheets.google.com</a> → create a new blank spreadsheet<br>
           <span class="step-num">2</span> Go to <strong>Extensions → Apps Script</strong><br>
-          <span class="step-num">3</span> Delete existing code → paste the script below<br>
+          <span class="step-num">3</span> Delete any existing code → paste the script below<br>
           <span class="step-num">4</span> Click <strong>Deploy → New deployment → Web app</strong><br>
           <span class="step-num">5</span> Execute as: <strong>Me</strong> &nbsp;|&nbsp; Who has access: <strong>Anyone</strong><br>
-          <span class="step-num">6</span> Copy the URL → paste above → Connect
+          <span class="step-num">6</span> Copy the deployment URL → paste above → Connect
         </p>
-        <button class="btn" onclick="toggleScript()" id="scriptToggleBtn"><i class="ti ti-code" aria-hidden="true"></i> Show Apps Script code</button>
+        <button class="btn" onclick="toggleScript()" id="scriptToggleBtn">
+          <i class="ti ti-code" aria-hidden="true"></i> Show Apps Script code
+        </button>
         <pre id="scriptBlock" style="display:none"></pre>
       </div>
 
       <div class="section-head" style="margin-top:16px">AI label reading</div>
       <div class="card">
         <h4><i class="ti ti-robot" aria-hidden="true"></i> Anthropic API key</h4>
-        <p>Powers photo-based label identification. Your key stays in your browser only — never sent anywhere except Anthropic's API. Get a key at <a href="https://console.anthropic.com" target="_blank" style="color:var(--blue-text)">console.anthropic.com</a>.</p>
+        <p>Powers photo-based label identification. Your key is stored in your browser only — never sent anywhere except Anthropic's API. Get one at <a href="https://console.anthropic.com" target="_blank" style="color:var(--blue-text)">console.anthropic.com</a>.</p>
         <div style="margin-bottom:10px"><input id="apiKey" type="password" placeholder="sk-ant-api03-..."></div>
         <button class="btn primary" onclick="saveApiKey()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save key</button>
       </div>
@@ -346,7 +436,7 @@
       <div class="section-head" style="margin-top:16px">Expiry alert window</div>
       <div class="card">
         <p>Flag chemicals as "expiring soon" this many days before their expiry date.</p>
-        <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
           <input type="number" id="expThresh" value="90" min="1" max="365" style="width:80px">
           <span style="color:var(--text2);font-size:13px">days before expiry</span>
           <button class="btn primary" onclick="saveThresh()"><i class="ti ti-check" aria-hidden="true"></i> Save</button>
@@ -362,10 +452,67 @@
         </div>
       </div>
     </div>
+
+  </div><!-- /.content -->
+</div><!-- /.app -->
+
+<!-- ════════════════════════════════════════════════════════════════════
+     CHEMICAL DETAIL MODAL
+     Opens when clicking the eye icon in inventory.
+     Shows all chemical info + auto-fetched datasheet / SDS links.
+     Green links = verified via PubChem API.
+     Amber links = constructed from catalog/CAS number (unverified).
+════════════════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="detailModal">
+  <div class="modal detail-modal">
+    <!-- Header: name + status badges -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+      <div>
+        <h3 id="dm_name" style="font-size:17px;font-weight:700;margin:0 0 6px"></h3>
+        <div id="dm_badges" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+      </div>
+      <button class="btn sm" onclick="closeDetailModal()" style="flex-shrink:0;margin-left:10px">
+        <i class="ti ti-x" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <!-- Datasheets & SDS links section -->
+    <div class="detail-section">
+      <div class="detail-section-title"><i class="ti ti-link" aria-hidden="true"></i> Datasheets &amp; SDS</div>
+      <div id="dm_links" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:28px">
+        <span style="font-size:12px;color:var(--text3)">Loading…</span>
+      </div>
+      <!-- Legend explaining green vs amber link badges -->
+      <div id="dm_links_note" style="font-size:10px;color:var(--text3);margin-top:6px;line-height:1.6;display:none"></div>
+    </div>
+
+    <!-- Chemical info grid -->
+    <div class="detail-section">
+      <div class="detail-section-title"><i class="ti ti-info-circle" aria-hidden="true"></i> Chemical details</div>
+      <div class="detail-grid" id="dm_info"></div>
+    </div>
+
+    <!-- Notes section (hidden if empty) -->
+    <div id="dm_notes_wrap" class="detail-section" style="display:none">
+      <div class="detail-section-title"><i class="ti ti-notes" aria-hidden="true"></i> Notes</div>
+      <div id="dm_notes" style="font-size:13px;color:var(--text2);line-height:1.6;background:var(--bg2);border-radius:var(--radius);padding:10px 12px"></div>
+    </div>
+
+    <!-- Action buttons -->
+    <div style="display:flex;gap:7px;justify-content:flex-end;flex-wrap:wrap;margin-top:4px;padding-top:12px;border-top:0.5px solid var(--border)">
+      <button class="btn sm" onclick="showQRFor(_detailId);closeDetailModal()"><i class="ti ti-qrcode" aria-hidden="true"></i> QR code</button>
+      <button class="btn sm" onclick="editFromDetail()"><i class="ti ti-edit" aria-hidden="true"></i> Edit</button>
+      <button class="btn sm danger" onclick="deleteFromDetail()"><i class="ti ti-trash" aria-hidden="true"></i> Delete</button>
+    </div>
   </div>
 </div>
 
-<!-- DUPLICATE WARNING MODAL -->
+<!-- ════════════════════════════════════════════════════════════════════
+     DUPLICATE WARNING MODAL
+     Fires when saving a chemical whose name / CAS / catalog
+     fuzzy-matches an existing entry.
+     Options: cancel, add stock to existing, or save as new anyway.
+════════════════════════════════════════════════════════════════════ -->
 <div class="modal-bg" id="dupModal">
   <div class="modal" style="max-width:500px">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
@@ -374,20 +521,28 @@
       </div>
       <div>
         <h3 style="font-size:15px;font-weight:600;margin:0">Possible duplicate detected</h3>
-        <p style="font-size:12px;color:var(--text2);margin:0">A chemical with a similar name already exists in your inventory.</p>
+        <p style="font-size:12px;color:var(--text2);margin:0">A chemical with a similar name already exists.</p>
       </div>
     </div>
+    <!-- Matched chemical cards injected here -->
     <div id="dupList" style="margin:14px 0;display:flex;flex-direction:column;gap:8px"></div>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:14px">Is this a new stock of an existing chemical, or a genuinely different chemical?</p>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:14px">Is this a new stock of an existing chemical, or a genuinely different one?</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
       <button class="btn" onclick="closeDupModal()"><i class="ti ti-x" aria-hidden="true"></i> Cancel — go back</button>
-      <button class="btn" onclick="incrementExistingStock()" id="dupAddStockBtn" style="display:none"><i class="ti ti-plus" aria-hidden="true"></i> Add stock to existing</button>
-      <button class="btn primary" onclick="forceSaveChemical()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save as new entry anyway</button>
+      <button class="btn" onclick="incrementExistingStock()" id="dupAddStockBtn" style="display:none">
+        <i class="ti ti-plus" aria-hidden="true"></i> Add stock to existing
+      </button>
+      <button class="btn primary" onclick="forceSaveChemical()">
+        <i class="ti ti-device-floppy" aria-hidden="true"></i> Save as new entry anyway
+      </button>
     </div>
   </div>
 </div>
 
-<!-- CHECKOUT MODAL -->
+<!-- ════════════════════════════════════════════════════════════════════
+     CHECKOUT LOG MODAL
+     Logs who used a chemical, how much, for what experiment.
+════════════════════════════════════════════════════════════════════ -->
 <div class="modal-bg" id="coModal">
   <div class="modal">
     <h3><i class="ti ti-clock" style="color:var(--green)" aria-hidden="true"></i> Log chemical usage</h3>
@@ -400,597 +555,989 @@
       <div class="form-group full"><label class="fl">Notes</label><input id="co_notes" placeholder="Observations, remaining amount..."></div>
     </div>
     <div class="btn-row">
-      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn" onclick="closeCheckoutModal()">Cancel</button>
       <button class="btn primary" onclick="saveCheckout()"><i class="ti ti-check" aria-hidden="true"></i> Log usage</button>
     </div>
   </div>
 </div>
 
 <script>
-var chemicals = JSON.parse(localStorage.getItem('chemtrack_v2')||'[]');
-var checkouts = JSON.parse(localStorage.getItem('chemtrack_co')||'[]');
-var images = [];
-var today = new Date().toISOString().slice(0,10);
+/* ════════════════════════════════════════════════════════════════════════
+   ChemTrack Lab — v2.1
+   All data stored in localStorage (keys: chemtrack_v2, chemtrack_co).
+   Google Sheets sync via Apps Script web app (optional, configured in Setup).
+   AI label reading via Anthropic API (optional, key stored in localStorage).
+════════════════════════════════════════════════════════════════════════ */
 
-function getThresh(){ return parseInt(localStorage.getItem('chemtrack_thresh')||'90'); }
+// ── Global state ─────────────────────────────────────────────────────────
+var chemicals = JSON.parse(localStorage.getItem('chemtrack_v2') || '[]');
+var checkouts = JSON.parse(localStorage.getItem('chemtrack_co') || '[]');
+var images    = [];  // base64 images staged for AI identification
+var today     = new Date().toISOString().slice(0, 10);  // YYYY-MM-DD
 
-var TABS = ['add','inventory','expiry','checkout','orders','qr','settings'];
-function showTab(t){
-  document.querySelectorAll('.tab').forEach(function(el,i){ el.classList.toggle('active', TABS[i]===t); });
-  document.querySelectorAll('.panel').forEach(function(el){ el.classList.remove('active'); });
-  document.getElementById('panel-'+t).classList.add('active');
-  if(t==='inventory') renderAll();
-  if(t==='expiry') renderExpiry();
-  if(t==='orders') renderOrders();
-  if(t==='checkout') renderCheckout();
-  if(t==='qr') populateQRSelect();
-  if(t==='settings') loadSettings();
+// Expiry warning threshold in days (configurable in Setup)
+function getThresh() { return parseInt(localStorage.getItem('chemtrack_thresh') || '90'); }
+
+// ── Tab navigation ───────────────────────────────────────────────────────
+var TABS = ['add', 'inventory', 'expiry', 'checkout', 'orders', 'qr', 'settings'];
+
+function showTab(t) {
+  // Update tab underline
+  document.querySelectorAll('.tab').forEach(function(el, i) {
+    el.classList.toggle('active', TABS[i] === t);
+  });
+  // Show matching panel, hide others
+  document.querySelectorAll('.panel').forEach(function(el) { el.classList.remove('active'); });
+  document.getElementById('panel-' + t).classList.add('active');
+  // Render content for data-driven panels
+  if (t === 'inventory') renderAll();
+  if (t === 'expiry')    renderExpiry();
+  if (t === 'orders')    renderOrders();
+  if (t === 'checkout')  renderCheckout();
+  if (t === 'qr')        populateQRSelect();
+  if (t === 'settings')  loadSettings();
 }
 
-document.getElementById('f_opened').onchange = function(){
-  document.getElementById('openDateGroup').style.display = this.checked?'block':'none';
-  if(this.checked && !document.getElementById('f_opendate').value)
+// ── Opened checkbox — reveal/hide open date field ────────────────────────
+document.getElementById('f_opened').onchange = function() {
+  document.getElementById('openDateGroup').style.display = this.checked ? 'block' : 'none';
+  // Default open date = today
+  if (this.checked && !document.getElementById('f_opendate').value) {
     document.getElementById('f_opendate').value = today;
+  }
 };
 
-function handleImages(inp){
-  if(!inp.files.length) return;
-  var files = Array.from(inp.files).slice(0,4);
+// ── Photo upload & preview ────────────────────────────────────────────────
+function handleImages(inp) {
+  if (!inp.files.length) return;
+  var files = Array.from(inp.files).slice(0, 4);  // max 4 photos
   images = [];
+
   var pg = document.getElementById('previewGrid');
-  pg.innerHTML = ''; pg.style.display = 'grid';
-  if(!document.getElementById('f_arrival').value) document.getElementById('f_arrival').value = today;
+  pg.innerHTML = '';
+  pg.style.display = 'grid';
+
+  // Auto-fill arrival date with today when first photo is added
+  if (!document.getElementById('f_arrival').value) {
+    document.getElementById('f_arrival').value = today;
+  }
+
   var pending = files.length;
-  files.forEach(function(f,i){
+  files.forEach(function(f, i) {
     var r = new FileReader();
-    r.onload = function(e){
+    r.onload = function(e) {
       images[i] = e.target.result;
+
+      // Build thumbnail with remove button
       var wrap = document.createElement('div'); wrap.className = 'preview-wrap';
-      var img = document.createElement('img'); img.src = e.target.result; img.className = 'preview-img';
-      var btn = document.createElement('button'); btn.className = 'remove-img'; btn.innerHTML = '×';
-      btn.onclick = function(){ images.splice(i,1,null); wrap.remove(); };
+      var img  = document.createElement('img');  img.src = e.target.result; img.className = 'preview-img';
+      var btn  = document.createElement('button'); btn.className = 'remove-img'; btn.innerHTML = '×';
+      btn.onclick = function() { images.splice(i, 1, null); wrap.remove(); };
       wrap.appendChild(img); wrap.appendChild(btn); pg.appendChild(wrap);
-      if(--pending===0) document.getElementById('aiBtn').style.display='block';
+
+      if (--pending === 0) document.getElementById('aiBtn').style.display = 'block';
     };
     r.readAsDataURL(f);
   });
-  inp.value='';
+  inp.value = '';
 }
 
-function clearImages(){
-  images=[]; document.getElementById('previewGrid').innerHTML='';
-  document.getElementById('previewGrid').style.display='none';
-  document.getElementById('aiBtn').style.display='none';
-  document.getElementById('aiStatus').style.display='none';
+function clearImages() {
+  images = [];
+  document.getElementById('previewGrid').innerHTML = '';
+  document.getElementById('previewGrid').style.display = 'none';
+  document.getElementById('aiBtn').style.display = 'none';
+  document.getElementById('aiStatus').style.display = 'none';
 }
 
-function setStatus(msg,type){
-  var el=document.getElementById('aiStatus');
-  el.style.display='flex'; el.className='ai-status '+type;
-  el.innerHTML=(type==='loading'?'<div class="spinner"></div>':'<i class="ti ti-'+(type==='success'?'check':'alert-circle')+'" aria-hidden="true"></i>')+'<span>'+msg+'</span>';
+// ── AI status bar helper ─────────────────────────────────────────────────
+function setStatus(msg, type) {
+  var el = document.getElementById('aiStatus');
+  el.style.display = 'flex';
+  el.className = 'ai-status ' + type;
+  var icon = type === 'loading'
+    ? '<div class="spinner"></div>'
+    : '<i class="ti ti-' + (type === 'success' ? 'check' : 'alert-circle') + '" aria-hidden="true"></i>';
+  el.innerHTML = icon + '<span>' + msg + '</span>';
 }
 
-async function runAI(){
-  var key=localStorage.getItem('chemtrack_apikey');
-  if(!key){ showTab('settings'); notify('Add your Anthropic API key in Setup first.','error'); return; }
-  var imgs=images.filter(Boolean);
-  if(!imgs.length){ notify('Add photos first.','error'); return; }
-  setStatus('Reading label with AI...','loading');
-  var content=imgs.map(function(b64){
-    var m=b64.split(',')[0].match(/:(.*?);/);
-    return {type:'image',source:{type:'base64',media_type:m?m[1]:'image/jpeg',data:b64.split(',')[1]}};
+// ── AI label identification (Anthropic API) ───────────────────────────────
+async function runAI() {
+  var key = localStorage.getItem('chemtrack_apikey');
+  if (!key) { showTab('settings'); notify('Add your Anthropic API key in Setup first.', 'error'); return; }
+
+  var imgs = images.filter(Boolean);
+  if (!imgs.length) { notify('Add photos first.', 'error'); return; }
+
+  setStatus('Reading label with AI…', 'loading');
+
+  // Build API message: images + instruction
+  var content = imgs.map(function(b64) {
+    var m = b64.split(',')[0].match(/:(.*?);/);
+    return { type: 'image', source: { type: 'base64', media_type: m ? m[1] : 'image/jpeg', data: b64.split(',')[1] } };
   });
-  content.push({type:'text',text:'You are a lab chemical label reader. Extract information from these label photos and return ONLY valid JSON (no markdown backticks, no preamble):\n{\n  "name": "full chemical name",\n  "company": "manufacturer name",\n  "catalog": "catalog or product number",\n  "cas": "CAS number",\n  "lot": "lot or batch number if visible",\n  "amount": "size e.g. 500mL or 100g",\n  "expiry": "expiry date as YYYY-MM-DD if visible else null",\n  "notes": "purity grade hazard codes any other label info"\n}'});
-  try{
-    var res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-opus-4-5',max_tokens:600,messages:[{role:'user',content:content}]})
+  content.push({ type: 'text', text: 'You are a lab chemical label reader. Extract information from these label photos and return ONLY valid JSON (no markdown, no extra text):\n{\n  "name": "full chemical name",\n  "company": "manufacturer name",\n  "catalog": "catalog or product number",\n  "cas": "CAS number",\n  "lot": "lot or batch number if visible",\n  "amount": "size e.g. 500mL or 100g",\n  "expiry": "expiry date as YYYY-MM-DD if visible else null",\n  "notes": "purity grade hazard codes any other label info"\n}' });
+
+  try {
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({ model: 'claude-opus-4-5', max_tokens: 600, messages: [{ role: 'user', content: content }] })
     });
-    var data=await res.json();
-    if(data.error) throw new Error(data.error.message);
-    var txt=data.content[0].text.trim().replace(/```json|```/g,'').trim();
-    var info=JSON.parse(txt);
-    ['name','company','catalog','cas','lot','amount','notes'].forEach(function(k){
-      if(info[k]) document.getElementById('f_'+k).value=info[k];
+    var data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+
+    var txt  = data.content[0].text.trim().replace(/```json|```/g, '').trim();
+    var info = JSON.parse(txt);
+
+    // Fill form fields from AI response
+    ['name', 'company', 'catalog', 'cas', 'lot', 'amount', 'notes'].forEach(function(k) {
+      if (info[k]) document.getElementById('f_' + k).value = info[k];
     });
-    if(info.expiry) document.getElementById('f_expiry').value=info.expiry;
-    setStatus('Done! Review the fields below and fill in anything missing.','success');
-  }catch(e){ setStatus('Error: '+e.message,'error'); }
+    if (info.expiry) document.getElementById('f_expiry').value = info.expiry;
+
+    setStatus('Done! Review the fields below and fill in anything missing.', 'success');
+  } catch(e) {
+    setStatus('Error: ' + e.message, 'error');
+  }
 }
 
-var _pendingChem = null;
-
-function buildChemObj(){
-  var name=document.getElementById('f_name').value.trim();
-  if(!name){ notify('Chemical name is required.','error'); return null; }
+// ── Build chemical object from form fields ────────────────────────────────
+function buildChemObj() {
+  var name = document.getElementById('f_name').value.trim();
+  if (!name) { notify('Chemical name is required.', 'error'); return null; }
   return {
-    id:Date.now(), name:name,
-    company:document.getElementById('f_company').value.trim(),
-    catalog:document.getElementById('f_catalog').value.trim(),
-    cas:document.getElementById('f_cas').value.trim(),
-    lot:document.getElementById('f_lot').value.trim(),
-    amount:document.getElementById('f_amount').value.trim(),
-    stocks:parseInt(document.getElementById('f_stocks').value)||1,
-    location:document.getElementById('f_location').value.trim(),
-    arrival:document.getElementById('f_arrival').value||today,
-    expiry:document.getElementById('f_expiry').value,
-    lastOrder:document.getElementById('f_lastorder').value,
-    freq:document.getElementById('f_freq').value,
-    notes:document.getElementById('f_notes').value.trim(),
-    opened:document.getElementById('f_opened').checked,
-    openDate:document.getElementById('f_opendate').value,
-    added:new Date().toISOString()
+    id:        Date.now(),
+    name:      name,
+    company:   document.getElementById('f_company').value.trim(),
+    catalog:   document.getElementById('f_catalog').value.trim(),
+    cas:       document.getElementById('f_cas').value.trim(),
+    lot:       document.getElementById('f_lot').value.trim(),
+    amount:    document.getElementById('f_amount').value.trim(),
+    stocks:    parseInt(document.getElementById('f_stocks').value) || 1,
+    location:  document.getElementById('f_location').value.trim(),
+    arrival:   document.getElementById('f_arrival').value || today,
+    expiry:    document.getElementById('f_expiry').value,
+    lastOrder: document.getElementById('f_lastorder').value,
+    freq:      document.getElementById('f_freq').value,
+    notes:     document.getElementById('f_notes').value.trim(),
+    opened:    document.getElementById('f_opened').checked,
+    openDate:  document.getElementById('f_opendate').value,
+    added:     new Date().toISOString()
   };
 }
 
-function findDuplicates(name, cas, catalog){
-  var q=name.toLowerCase().trim();
-  return chemicals.filter(function(c){
-    // Exact name match
-    if(c.name.toLowerCase().trim()===q) return true;
-    // CAS match (if both have it)
-    if(cas && c.cas && c.cas.replace(/\s/g,'')===cas.replace(/\s/g,'')) return true;
-    // Catalog match (if both have it)
-    if(catalog && c.catalog && c.catalog.toLowerCase()===catalog.toLowerCase()) return true;
-    // Fuzzy: one name contains the other (catches "Ethanol" vs "Ethanol absolute")
-    if(c.name.toLowerCase().includes(q) || q.includes(c.name.toLowerCase())) return true;
+// ── Duplicate detection ───────────────────────────────────────────────────
+// Checks for: exact name match, fuzzy name containment, same CAS, same catalog
+var _pendingChem = null;
+
+function findDuplicates(name, cas, catalog) {
+  var q = name.toLowerCase().trim();
+  return chemicals.filter(function(c) {
+    if (c.name.toLowerCase().trim() === q) return true;  // exact name
+    if (cas     && c.cas     && c.cas.replace(/\s/g,'')     === cas.replace(/\s/g,''))         return true;  // CAS match
+    if (catalog && c.catalog && c.catalog.toLowerCase()     === catalog.toLowerCase())          return true;  // catalog match
+    if (c.name.toLowerCase().includes(q) || q.includes(c.name.toLowerCase()))                  return true;  // fuzzy name
     return false;
   });
 }
 
-function saveChemical(){
-  var chem=buildChemObj(); if(!chem) return;
-  var dups=findDuplicates(chem.name, chem.cas, chem.catalog);
-  if(dups.length>0){
-    _pendingChem=chem;
-    showDupModal(dups, dups.length===1);
+function saveChemical() {
+  var chem = buildChemObj();
+  if (!chem) return;
+
+  var dups = findDuplicates(chem.name, chem.cas, chem.catalog);
+  if (dups.length > 0) {
+    // Hold the new chemical object and show the warning modal
+    _pendingChem = chem;
+    showDupModal(dups);
     return;
   }
   commitSave(chem);
 }
 
-function forceSaveChemical(){
-  if(_pendingChem){ commitSave(_pendingChem); _pendingChem=null; }
+// Called when user clicks "Save as new entry anyway" in the duplicate modal
+function forceSaveChemical() {
+  if (_pendingChem) { commitSave(_pendingChem); _pendingChem = null; }
   closeDupModal();
 }
 
-function commitSave(chem){
-  chemicals.push(chem); save();
-  syncRow(chem,'addChem');
-  notify('"'+esc(chem.name)+'" saved!','success');
-  clearForm(); clearImages(); updateCount();
+function commitSave(chem) {
+  chemicals.push(chem);
+  save();
+  syncRow(chem, 'addChem');
+  notify('"' + esc(chem.name) + '" saved!', 'success');
+  clearForm();
+  clearImages();
+  updateCount();
 }
 
-function showDupModal(dups, single){
-  var list=document.getElementById('dupList');
-  list.innerHTML=dups.map(function(c){
-    var expS=expiryStatus(c);
-    var expBadge=expS==='expired'?'<span class="badge red">Expired</span>':expS==='expiring'?'<span class="badge amber">Expiring</span>':'';
-    var opBadge=c.opened?'<span class="badge amber">Opened</span>':'<span class="badge green">Sealed</span>';
-    return '<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px 14px">'+
-      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px">'+
-        '<div style="font-weight:600;font-size:14px">'+esc(c.name)+'</div>'+
-        '<div style="display:flex;gap:4px;flex-shrink:0">'+opBadge+' '+expBadge+'</div>'+
-      '</div>'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:12px">'+
-        dupRow('Company',c.company)+dupRow('Catalog',c.catalog)+
-        dupRow('CAS',c.cas)+dupRow('Lot',c.lot)+
-        dupRow('Amount',c.amount)+dupRow('Stocks',c.stocks)+
-        dupRow('Location',c.location)+dupRow('Arrival',c.arrival)+
-        dupRow('Expiry',c.expiry||'—')+dupRow('Open date',c.openDate||'—')+
-      '</div>'+
-      (c.notes?'<div style="margin-top:6px;font-size:11px;color:var(--text2);border-top:0.5px solid var(--border);padding-top:6px">'+esc(c.notes)+'</div>':'')+
-      '<div style="margin-top:8px;display:flex;gap:6px">'+
-        '<button class="btn sm" onclick="editChem('+c.id+');closeDupModal()"><i class="ti ti-edit" aria-hidden="true"></i> Edit this entry</button>'+
-        '<button class="btn sm" onclick="jumpToInventory('+c.id+')"><i class="ti ti-list" aria-hidden="true"></i> View in inventory</button>'+
-      '</div>'+
+function showDupModal(dups) {
+  var list = document.getElementById('dupList');
+  list.innerHTML = dups.map(function(c) {
+    var expS   = expiryStatus(c);
+    var expBdg = expS === 'expired'  ? '<span class="badge red">Expired</span>'     : '';
+    expBdg    += expS === 'expiring' ? '<span class="badge amber">Expiring</span>'  : '';
+    var opBdg  = c.opened ? '<span class="badge amber">Opened</span>' : '<span class="badge green">Sealed</span>';
+    return '<div style="background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px 14px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px">' +
+        '<div style="font-weight:600;font-size:14px">' + esc(c.name) + '</div>' +
+        '<div style="display:flex;gap:4px;flex-shrink:0">' + opBdg + ' ' + expBdg + '</div>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:12px">' +
+        dupRow('Company', c.company) + dupRow('Catalog', c.catalog) +
+        dupRow('CAS', c.cas)         + dupRow('Lot', c.lot) +
+        dupRow('Amount', c.amount)   + dupRow('Stocks', c.stocks) +
+        dupRow('Location', c.location) + dupRow('Expiry', c.expiry) +
+      '</div>' +
+      '<div style="margin-top:8px;display:flex;gap:6px">' +
+        '<button class="btn sm" onclick="editChem(' + c.id + ');closeDupModal()"><i class="ti ti-edit" aria-hidden="true"></i> Edit</button>' +
+        '<button class="btn sm" onclick="jumpToInventory(' + c.id + ')"><i class="ti ti-list" aria-hidden="true"></i> View in inventory</button>' +
+      '</div>' +
     '</div>';
   }).join('');
-  // Show "Add stock" button only when there's exactly one exact match
-  var exactMatch=dups.length===1?dups[0]:null;
-  var addBtn=document.getElementById('dupAddStockBtn');
-  if(exactMatch){ addBtn.style.display='inline-flex'; addBtn.dataset.id=exactMatch.id; }
-  else { addBtn.style.display='none'; }
+
+  // Show "Add stock" only when there is exactly one match (unambiguous)
+  var addBtn = document.getElementById('dupAddStockBtn');
+  if (dups.length === 1) {
+    addBtn.style.display = 'inline-flex';
+    addBtn.dataset.id = dups[0].id;
+  } else {
+    addBtn.style.display = 'none';
+  }
   document.getElementById('dupModal').classList.add('open');
 }
 
-function dupRow(k,v){ return v?'<div><span style="color:var(--text2)">'+k+':</span> <strong>'+esc(String(v))+'</strong></div>':''; }
+function dupRow(k, v) {
+  return v ? '<div><span style="color:var(--text2)">' + k + ':</span> <strong>' + esc(String(v)) + '</strong></div>' : '';
+}
 
-function closeDupModal(){ document.getElementById('dupModal').classList.remove('open'); _pendingChem=null; }
-document.getElementById('dupModal').addEventListener('click',function(e){ if(e.target===this) closeDupModal(); });
+function closeDupModal() { document.getElementById('dupModal').classList.remove('open'); _pendingChem = null; }
+document.getElementById('dupModal').addEventListener('click', function(e) { if (e.target === this) closeDupModal(); });
 
-function incrementExistingStock(){
-  var id=parseInt(document.getElementById('dupAddStockBtn').dataset.id);
-  var c=chemicals.find(function(x){return x.id===id;}); if(!c) return;
-  var addQty=(_pendingChem&&_pendingChem.stocks)||1;
-  c.stocks=(c.stocks||0)+addQty;
-  // Also update lot/arrival if provided in the new entry
-  if(_pendingChem){
-    if(_pendingChem.lot) c.lot=_pendingChem.lot;
-    if(_pendingChem.arrival) c.arrival=_pendingChem.arrival;
-    if(_pendingChem.expiry) c.expiry=_pendingChem.expiry;
+// Increment stock count on the existing entry instead of creating a duplicate
+function incrementExistingStock() {
+  var id  = parseInt(document.getElementById('dupAddStockBtn').dataset.id);
+  var c   = chemicals.find(function(x) { return x.id === id; });
+  if (!c) return;
+  c.stocks = (c.stocks || 0) + ((_pendingChem && _pendingChem.stocks) || 1);
+  // Update lot/arrival/expiry from new scan if provided
+  if (_pendingChem) {
+    if (_pendingChem.lot)    c.lot    = _pendingChem.lot;
+    if (_pendingChem.arrival) c.arrival = _pendingChem.arrival;
+    if (_pendingChem.expiry)  c.expiry  = _pendingChem.expiry;
   }
-  save(); syncRow(c,'addChem');
-  notify('Stock updated to '+c.stocks+' for "'+esc(c.name)+'".','success');
+  save();
+  syncRow(c, 'addChem');
+  notify('Stock updated to ' + c.stocks + ' for "' + esc(c.name) + '".', 'success');
   clearForm(); clearImages(); updateCount();
-  _pendingChem=null;
+  _pendingChem = null;
   closeDupModal();
 }
 
-function jumpToInventory(id){
+function jumpToInventory(id) {
   closeDupModal();
   showTab('inventory');
-  setTimeout(function(){
-    var c=chemicals.find(function(x){return x.id===id;}); if(!c) return;
-    document.getElementById('searchInput').value=c.name;
+  setTimeout(function() {
+    var c = chemicals.find(function(x) { return x.id === id; });
+    if (!c) return;
+    document.getElementById('searchInput').value = c.name;
     renderTable();
-    // Briefly highlight
-    var rows=document.querySelectorAll('.tbl tbody tr');
-    rows.forEach(function(r){ if(r.textContent.includes(c.name)){ r.style.background='var(--amber-light)'; setTimeout(function(){r.style.background='';},2000); } });
-  },150);
+    // Briefly highlight the matched row in amber
+    document.querySelectorAll('.tbl tbody tr').forEach(function(r) {
+      if (r.textContent.includes(c.name)) {
+        r.style.background = 'var(--amber-light)';
+        setTimeout(function() { r.style.background = ''; }, 2000);
+      }
+    });
+  }, 150);
 }
 
-function clearForm(){
-  ['f_name','f_company','f_catalog','f_cas','f_lot','f_amount','f_stocks','f_location','f_arrival','f_expiry','f_lastorder','f_notes','f_opendate'].forEach(function(id){ document.getElementById(id).value=''; });
-  document.getElementById('f_freq').value='';
-  document.getElementById('f_opened').checked=false;
-  document.getElementById('openDateGroup').style.display='none';
-  document.getElementById('aiStatus').style.display='none';
+// ── Form clear ───────────────────────────────────────────────────────────
+function clearForm() {
+  ['f_name','f_company','f_catalog','f_cas','f_lot','f_amount','f_stocks',
+   'f_location','f_arrival','f_expiry','f_lastorder','f_notes','f_opendate']
+    .forEach(function(id) { document.getElementById(id).value = ''; });
+  document.getElementById('f_freq').value = '';
+  document.getElementById('f_opened').checked = false;
+  document.getElementById('openDateGroup').style.display = 'none';
+  document.getElementById('aiStatus').style.display = 'none';
 }
 
-function save(){ localStorage.setItem('chemtrack_v2',JSON.stringify(chemicals)); }
-function saveCO(){ localStorage.setItem('chemtrack_co',JSON.stringify(checkouts)); }
+// ── LocalStorage persistence ─────────────────────────────────────────────
+function save()   { localStorage.setItem('chemtrack_v2', JSON.stringify(chemicals)); }
+function saveCO() { localStorage.setItem('chemtrack_co', JSON.stringify(checkouts)); }
 
-function expiryStatus(c){
-  if(!c.expiry) return 'none';
-  var diff=Math.round((new Date(c.expiry)-new Date())/86400000);
-  if(diff<0) return 'expired';
-  if(diff<=getThresh()) return 'expiring';
+// ── Expiry helpers ───────────────────────────────────────────────────────
+// Returns: 'none' | 'ok' | 'expiring' | 'expired'
+function expiryStatus(c) {
+  if (!c.expiry) return 'none';
+  var diff = Math.round((new Date(c.expiry) - new Date()) / 86400000);
+  if (diff < 0) return 'expired';
+  if (diff <= getThresh()) return 'expiring';
   return 'ok';
 }
 
-function expiryBadge(c){
-  var s=expiryStatus(c);
-  if(s==='expired') return '<span class="badge red"><i class="ti ti-alert-triangle" style="font-size:9px" aria-hidden="true"></i> Expired</span>';
-  if(s==='expiring'){
-    var d=Math.round((new Date(c.expiry)-new Date())/86400000);
-    return '<span class="badge amber">'+d+'d left</span>';
+// Returns a colour-coded badge HTML string for a chemical's expiry
+function expiryBadge(c) {
+  var s = expiryStatus(c);
+  if (s === 'expired') return '<span class="badge red"><i class="ti ti-alert-triangle" style="font-size:9px" aria-hidden="true"></i> Expired</span>';
+  if (s === 'expiring') {
+    var d = Math.round((new Date(c.expiry) - new Date()) / 86400000);
+    return '<span class="badge amber">' + d + 'd left</span>';
   }
-  if(s==='ok') return '<span class="badge green">'+c.expiry+'</span>';
+  if (s === 'ok') return '<span class="badge green">' + c.expiry + '</span>';
   return '<span class="badge gray">—</span>';
 }
 
-function updateCount(){
-  var expCount=chemicals.filter(function(c){ var s=expiryStatus(c); return s==='expired'||s==='expiring'; }).length;
-  document.getElementById('stockCount').textContent=chemicals.length+' chemical'+(chemicals.length!==1?'s':'');
-  document.getElementById('expAlert').style.display=expCount?'inline-flex':'none';
-  if(expCount) document.getElementById('expAlertNum').textContent=expCount;
-  document.getElementById('gsWarning').style.display=localStorage.getItem('chemtrack_gsurl')?'none':'flex';
+// ── Top bar count & alert badge ───────────────────────────────────────────
+function updateCount() {
+  var expCount = chemicals.filter(function(c) {
+    var s = expiryStatus(c); return s === 'expired' || s === 'expiring';
+  }).length;
+  document.getElementById('stockCount').textContent = chemicals.length + ' chemical' + (chemicals.length !== 1 ? 's' : '');
+  document.getElementById('expAlert').style.display = expCount ? 'inline-flex' : 'none';
+  if (expCount) document.getElementById('expAlertNum').textContent = expCount;
+  // Show Google Sheets warning on Add tab if not configured
+  document.getElementById('gsWarning').style.display = localStorage.getItem('chemtrack_gsurl') ? 'none' : 'flex';
 }
 
-function renderAll(){ updateCount(); renderStats(); renderTable(); renderLocFilter(); }
+// ── Inventory rendering ───────────────────────────────────────────────────
+function renderAll() { updateCount(); renderStats(); renderTable(); renderLocFilter(); }
 
-function renderStats(){
-  var opened=chemicals.filter(function(c){return c.opened;}).length;
-  var locs=[...new Set(chemicals.map(function(c){return c.location||'';}))].filter(Boolean).length;
-  var low=chemicals.filter(function(c){return c.stocks<=1;}).length;
-  var exp=chemicals.filter(function(c){ var s=expiryStatus(c); return s==='expired'||s==='expiring'; }).length;
-  document.getElementById('statGrid').innerHTML=
-    st(chemicals.length,'Total chemicals','')+st(opened,'Opened','bottles')+
-    st(exp,'Expiry alerts',getThresh()+'d window')+st(low,'Low stock','≤1 unit');
+function renderStats() {
+  var thresh  = getThresh();
+  var opened  = chemicals.filter(function(c) { return c.opened; }).length;
+  var locs    = [...new Set(chemicals.map(function(c) { return c.location || ''; }))].filter(Boolean).length;
+  var low     = chemicals.filter(function(c) { return c.stocks <= 1; }).length;
+  var exp     = chemicals.filter(function(c) { var s = expiryStatus(c); return s === 'expired' || s === 'expiring'; }).length;
+  document.getElementById('statGrid').innerHTML =
+    st(chemicals.length, 'Total chemicals', '') +
+    st(opened,           'Opened',           'bottles') +
+    st(exp,              'Expiry alerts',    thresh + 'd window') +
+    st(low,              'Low stock',        '≤1 unit');
 }
-function st(v,l,s){ return '<div class="stat-card"><div class="lbl">'+l+'</div><div class="val">'+v+'</div>'+(s?'<div class="sub">'+s+'</div>':'')+'</div>'; }
-
-function renderLocFilter(){
-  var locs=[...new Set(chemicals.map(function(c){return c.location;}).filter(Boolean))].sort();
-  var sel=document.getElementById('filterLoc'), cur=sel.value;
-  sel.innerHTML='<option value="">All locations</option>'+locs.map(function(l){return '<option'+(l===cur?' selected':'')+'>'+l+'</option>';}).join('');
+function st(v, l, s) {
+  return '<div class="stat-card"><div class="lbl">' + l + '</div><div class="val">' + v + '</div>' +
+         (s ? '<div class="sub">' + s + '</div>' : '') + '</div>';
 }
 
-function renderTable(){
-  var q=document.getElementById('searchInput').value.toLowerCase();
-  var loc=document.getElementById('filterLoc').value;
-  var fs=document.getElementById('filterStatus').value;
-  var data=chemicals.filter(function(c){
-    var m=!q||[c.name,c.cas,c.catalog,c.company,c.location,c.lot].some(function(v){return v&&v.toLowerCase().includes(q);});
-    var lm=!loc||c.location===loc;
-    var sm=true;
-    if(fs==='open') sm=c.opened;
-    if(fs==='sealed') sm=!c.opened;
-    if(fs==='expiring') sm=expiryStatus(c)==='expiring';
-    if(fs==='expired') sm=expiryStatus(c)==='expired';
-    if(fs==='lowstock') sm=c.stocks<=1;
-    return m&&lm&&sm;
+function renderLocFilter() {
+  var locs = [...new Set(chemicals.map(function(c) { return c.location; }).filter(Boolean))].sort();
+  var sel  = document.getElementById('filterLoc'), cur = sel.value;
+  sel.innerHTML = '<option value="">All locations</option>' +
+    locs.map(function(l) { return '<option' + (l === cur ? ' selected' : '') + '>' + l + '</option>'; }).join('');
+}
+
+function renderTable() {
+  var q   = document.getElementById('searchInput').value.toLowerCase();
+  var loc = document.getElementById('filterLoc').value;
+  var fs  = document.getElementById('filterStatus').value;
+
+  var data = chemicals.filter(function(c) {
+    var m  = !q || [c.name, c.cas, c.catalog, c.company, c.location, c.lot]
+                    .some(function(v) { return v && v.toLowerCase().includes(q); });
+    var lm = !loc || c.location === loc;
+    var sm = true;
+    if (fs === 'open')     sm = c.opened;
+    if (fs === 'sealed')   sm = !c.opened;
+    if (fs === 'expiring') sm = expiryStatus(c) === 'expiring';
+    if (fs === 'expired')  sm = expiryStatus(c) === 'expired';
+    if (fs === 'lowstock') sm = c.stocks <= 1;
+    return m && lm && sm;
   });
-  var wrap=document.getElementById('tableWrap');
-  if(!data.length){ wrap.innerHTML='<div class="empty-state"><i class="ti ti-search" aria-hidden="true"></i><p>'+(chemicals.length?'No results match your filters.':'No chemicals yet. Use the Add tab.')+'</p></div>'; return; }
-  wrap.innerHTML='<table class="tbl">'+
-    '<thead><tr><th style="width:20%">Name</th><th style="width:13%">Company</th><th style="width:9%;font-family:monospace">Catalog</th><th style="width:9%;font-family:monospace">CAS</th><th style="width:8%">Amount</th><th style="width:6%">Stock</th><th style="width:10%">Location</th><th style="width:8%">Arrival</th><th style="width:10%">Expiry</th><th style="width:7%">Actions</th></tr></thead>'+
-    '<tbody>'+data.map(function(c){
-      var stb=c.stocks<=0?'<span class="badge red">Out</span>':c.stocks===1?'<span class="badge amber">1</span>':'<span class="badge blue">'+c.stocks+'</span>';
-      var opb=c.opened?'<span class="badge amber" style="font-size:9px;margin-left:3px">Open</span>':'';
-      return '<tr>'+
-        '<td><strong>'+esc(c.name)+'</strong>'+opb+'</td>'+
-        '<td>'+esc(c.company||'—')+'</td>'+
-        '<td style="font-family:monospace;font-size:11px">'+esc(c.catalog||'—')+'</td>'+
-        '<td style="font-family:monospace;font-size:11px">'+esc(c.cas||'—')+'</td>'+
-        '<td>'+esc(c.amount||'—')+'</td>'+
-        '<td>'+stb+'</td>'+
-        '<td>'+esc(c.location||'—')+'</td>'+
-        '<td style="font-size:11px">'+esc(c.arrival||'—')+'</td>'+
-        '<td>'+expiryBadge(c)+'</td>'+
-        '<td style="white-space:nowrap">'+
-          '<button class="btn sm" onclick="editChem('+c.id+')" title="Edit"><i class="ti ti-edit" aria-hidden="true"></i></button> '+
-          '<button class="btn sm" onclick="showQRFor('+c.id+')" title="QR"><i class="ti ti-qrcode" aria-hidden="true"></i></button> '+
-          '<button class="btn sm danger" onclick="deleteChem('+c.id+')" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></button>'+
-        '</td></tr>';
-    }).join('')+'</tbody></table>';
-}
 
-function renderExpiry(){
-  var thresh=getThresh(), now=new Date();
-  var groups={expired:[],expiring:[],ok:[],none:[]};
-  chemicals.forEach(function(c){ groups[expiryStatus(c)].push(c); });
-  groups.expired.sort(function(a,b){return a.expiry.localeCompare(b.expiry);});
-  groups.expiring.sort(function(a,b){return a.expiry.localeCompare(b.expiry);});
-  groups.ok.sort(function(a,b){return a.expiry.localeCompare(b.expiry);});
-  var html='';
-  if(!chemicals.length){ html='<div class="empty-state"><i class="ti ti-calendar-x" aria-hidden="true"></i><p>No chemicals added yet.</p></div>'; }
-  else {
-    if(groups.expired.length) html+=expSection('Expired — action required',groups.expired,'red',now);
-    if(groups.expiring.length) html+=expSection('Expiring within '+thresh+' days',groups.expiring,'amber',now);
-    if(groups.ok.length) html+=expSection('Good standing',groups.ok,'green',now);
-    if(groups.none.length) html+=expSection('No expiry date recorded',groups.none,'gray',now);
+  var wrap = document.getElementById('tableWrap');
+  if (!data.length) {
+    wrap.innerHTML = '<div class="empty-state"><i class="ti ti-search" aria-hidden="true"></i><p>' +
+      (chemicals.length ? 'No results match your filters.' : 'No chemicals yet. Use the Add tab.') + '</p></div>';
+    return;
   }
-  document.getElementById('expiryContent').innerHTML=html;
+
+  wrap.innerHTML = '<table class="tbl">' +
+    '<thead><tr>' +
+      '<th style="width:20%">Name</th><th style="width:13%">Company</th>' +
+      '<th style="width:9%">Catalog</th><th style="width:9%">CAS</th>' +
+      '<th style="width:8%">Amount</th><th style="width:6%">Stock</th>' +
+      '<th style="width:10%">Location</th><th style="width:8%">Arrival</th>' +
+      '<th style="width:10%">Expiry</th><th style="width:7%">Actions</th>' +
+    '</tr></thead><tbody>' +
+    data.map(function(c) {
+      var stb = c.stocks <= 0 ? '<span class="badge red">Out</span>'
+              : c.stocks === 1 ? '<span class="badge amber">1</span>'
+              : '<span class="badge blue">' + c.stocks + '</span>';
+      var opb = c.opened ? '<span class="badge amber" style="font-size:9px;margin-left:3px">Open</span>' : '';
+      return '<tr>' +
+        '<td><strong>' + esc(c.name) + '</strong>' + opb + '</td>' +
+        '<td>' + esc(c.company || '—') + '</td>' +
+        '<td style="font-family:monospace;font-size:11px">' + esc(c.catalog || '—') + '</td>' +
+        '<td style="font-family:monospace;font-size:11px">' + esc(c.cas || '—') + '</td>' +
+        '<td>' + esc(c.amount || '—') + '</td>' +
+        '<td>' + stb + '</td>' +
+        '<td>' + esc(c.location || '—') + '</td>' +
+        '<td style="font-size:11px">' + esc(c.arrival || '—') + '</td>' +
+        '<td>' + expiryBadge(c) + '</td>' +
+        '<td style="white-space:nowrap">' +
+          '<button class="btn sm primary" onclick="openDetailModal(' + c.id + ')" title="Details &amp; links"><i class="ti ti-eye" aria-hidden="true"></i></button> ' +
+          '<button class="btn sm" onclick="editChem(' + c.id + ')" title="Edit"><i class="ti ti-edit" aria-hidden="true"></i></button> ' +
+          '<button class="btn sm danger" onclick="deleteChem(' + c.id + ')" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></button>' +
+        '</td></tr>';
+    }).join('') + '</tbody></table>';
 }
 
-function expSection(title,items,color,now){
-  return '<div class="section-head">'+title+' ('+items.length+')</div>'+
-    '<div class="list-card" style="margin-bottom:14px">'+
-    items.map(function(c){
-      var diff=c.expiry?Math.round((new Date(c.expiry)-now)/86400000):null;
-      var label=diff===null?'No date':diff<0?'Expired '+(Math.abs(diff))+'d ago':diff===0?'Expires today':'Expires in '+diff+'d';
-      return '<div class="list-row">'+
-        '<div style="flex:1">'+
-        '<div style="font-weight:600;font-size:13px">'+esc(c.name)+'</div>'+
-        '<div style="font-size:11px;color:var(--text2);margin-top:2px">'+esc(c.company||'')+(c.catalog?' · '+c.catalog:'')+(c.lot?' · Lot '+c.lot:'')+(c.location?' · '+c.location:'')+'</div>'+
-        '</div>'+
-        '<div style="text-align:right;flex-shrink:0;margin-left:10px">'+
-        '<span class="badge '+color+'">'+label+'</span>'+
-        '<div style="font-size:10px;color:var(--text3);margin-top:3px">Exp: '+(c.expiry||'—')+'  ·  Stock: '+c.stocks+'</div>'+
+// ── Expiry panel ─────────────────────────────────────────────────────────
+function renderExpiry() {
+  var thresh = getThresh(), now = new Date();
+  var groups = { expired: [], expiring: [], ok: [], none: [] };
+  chemicals.forEach(function(c) { groups[expiryStatus(c)].push(c); });
+  ['expired','expiring','ok'].forEach(function(k) {
+    groups[k].sort(function(a, b) { return (a.expiry||'').localeCompare(b.expiry||''); });
+  });
+  var html = '';
+  if (!chemicals.length) {
+    html = '<div class="empty-state"><i class="ti ti-calendar-x" aria-hidden="true"></i><p>No chemicals added yet.</p></div>';
+  } else {
+    if (groups.expired.length)  html += expSection('Expired — action required',          groups.expired,  'red',   now);
+    if (groups.expiring.length) html += expSection('Expiring within ' + thresh + ' days', groups.expiring, 'amber', now);
+    if (groups.ok.length)       html += expSection('Good standing',                       groups.ok,       'green', now);
+    if (groups.none.length)     html += expSection('No expiry date recorded',             groups.none,     'gray',  now);
+  }
+  document.getElementById('expiryContent').innerHTML = html;
+}
+
+function expSection(title, items, color, now) {
+  return '<div class="section-head">' + title + ' (' + items.length + ')</div>' +
+    '<div class="list-card" style="margin-bottom:14px">' +
+    items.map(function(c) {
+      var diff  = c.expiry ? Math.round((new Date(c.expiry) - now) / 86400000) : null;
+      var label = diff === null    ? 'No date'
+                : diff < 0        ? 'Expired ' + Math.abs(diff) + 'd ago'
+                : diff === 0      ? 'Expires today'
+                : 'Expires in ' + diff + 'd';
+      return '<div class="list-row">' +
+        '<div style="flex:1">' +
+          '<div style="font-weight:600;font-size:13px">' + esc(c.name) + '</div>' +
+          '<div style="font-size:11px;color:var(--text2);margin-top:2px">' +
+            esc(c.company || '') + (c.catalog ? ' · ' + c.catalog : '') +
+            (c.lot ? ' · Lot ' + c.lot : '') + (c.location ? ' · ' + c.location : '') +
+          '</div>' +
+        '</div>' +
+        '<div style="text-align:right;flex-shrink:0;margin-left:10px">' +
+          '<span class="badge ' + color + '">' + label + '</span>' +
+          '<div style="font-size:10px;color:var(--text3);margin-top:3px">Exp: ' + (c.expiry || '—') + ' · Stock: ' + c.stocks + '</div>' +
         '</div></div>';
-    }).join('')+'</div>';
+    }).join('') + '</div>';
 }
 
-function openCheckoutModal(){
-  var sel=document.getElementById('co_chem');
-  sel.innerHTML='<option value="">Select chemical...</option>'+chemicals.map(function(c){return '<option value="'+c.id+'">'+esc(c.name)+(c.catalog?' ('+c.catalog+')':'')+'</option>';}).join('');
-  document.getElementById('co_date').value=new Date().toISOString().slice(0,16);
-  ['co_user','co_amount','co_purpose','co_notes'].forEach(function(id){document.getElementById(id).value='';});
+// ── Checkout log ──────────────────────────────────────────────────────────
+function openCheckoutModal() {
+  var sel = document.getElementById('co_chem');
+  sel.innerHTML = '<option value="">Select chemical...</option>' +
+    chemicals.map(function(c) { return '<option value="' + c.id + '">' + esc(c.name) + (c.catalog ? ' (' + c.catalog + ')' : '') + '</option>'; }).join('');
+  document.getElementById('co_date').value = new Date().toISOString().slice(0, 16);
+  ['co_user', 'co_amount', 'co_purpose', 'co_notes'].forEach(function(id) { document.getElementById(id).value = ''; });
   document.getElementById('coModal').classList.add('open');
 }
-function closeModal(){ document.getElementById('coModal').classList.remove('open'); }
-document.getElementById('coModal').addEventListener('click',function(e){ if(e.target===this) closeModal(); });
 
-function saveCheckout(){
-  var chemId=parseInt(document.getElementById('co_chem').value);
-  var user=document.getElementById('co_user').value.trim();
-  if(!chemId||!user){ notify('Select a chemical and enter your name.','error'); return; }
-  var chem=chemicals.find(function(c){return c.id===chemId;});
-  var co={
-    id:Date.now(), chemId:chemId, chemName:chem?chem.name:'',
-    user:user, amount:document.getElementById('co_amount').value.trim(),
-    date:document.getElementById('co_date').value,
-    purpose:document.getElementById('co_purpose').value.trim(),
-    notes:document.getElementById('co_notes').value.trim()
+function closeCheckoutModal() { document.getElementById('coModal').classList.remove('open'); }
+document.getElementById('coModal').addEventListener('click', function(e) { if (e.target === this) closeCheckoutModal(); });
+
+function saveCheckout() {
+  var chemId = parseInt(document.getElementById('co_chem').value);
+  var user   = document.getElementById('co_user').value.trim();
+  if (!chemId || !user) { notify('Select a chemical and enter your name.', 'error'); return; }
+
+  var chem = chemicals.find(function(c) { return c.id === chemId; });
+  var co   = {
+    id:       Date.now(),
+    chemId:   chemId,
+    chemName: chem ? chem.name : '',
+    user:     user,
+    amount:   document.getElementById('co_amount').value.trim(),
+    date:     document.getElementById('co_date').value,
+    purpose:  document.getElementById('co_purpose').value.trim(),
+    notes:    document.getElementById('co_notes').value.trim()
   };
-  checkouts.unshift(co); saveCO();
-  syncRow(co,'addCheckout');
-  closeModal(); renderCheckout();
-  notify('Usage logged for '+esc(chem?chem.name:'chemical')+'!','success');
+  checkouts.unshift(co);
+  saveCO();
+  syncRow(co, 'addCheckout');
+  closeCheckoutModal();
+  renderCheckout();
+  notify('Usage logged for "' + esc(chem ? chem.name : 'chemical') + '"!', 'success');
 }
 
-function renderCheckout(){
-  if(!checkouts.length){ document.getElementById('checkoutList').innerHTML='<div class="empty-state"><i class="ti ti-clock" aria-hidden="true"></i><p>No usage logged yet. Click "Log usage" to start.</p></div>'; return; }
-  var html='<div class="list-card">';
-  checkouts.slice(0,100).forEach(function(co){
-    var initials=co.user.split(' ').map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2);
-    var dt=co.date?new Date(co.date).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
-    html+='<div class="list-row">'+
-      '<div class="avatar">'+initials+'</div>'+
-      '<div style="flex:1">'+
-      '<div style="font-weight:600;font-size:13px">'+esc(co.chemName)+'</div>'+
-      '<div style="font-size:12px;color:var(--text2)">'+esc(co.user)+(co.amount?' · '+co.amount:'')+(co.purpose?' · '+co.purpose:'')+'</div>'+
-      '<div style="font-size:11px;color:var(--text3);margin-top:2px">'+dt+'</div>'+
-      '</div>'+
-      '<button class="btn sm danger" onclick="deleteCheckout('+co.id+')" title="Delete"><i class="ti ti-x" aria-hidden="true"></i></button>'+
-      '</div>';
+function renderCheckout() {
+  if (!checkouts.length) {
+    document.getElementById('checkoutList').innerHTML =
+      '<div class="empty-state"><i class="ti ti-clock" aria-hidden="true"></i><p>No usage logged yet.</p></div>';
+    return;
+  }
+  var html = '<div class="list-card">';
+  checkouts.slice(0, 100).forEach(function(co) {
+    var initials = co.user.split(' ').map(function(w) { return w[0] || ''; }).join('').toUpperCase().slice(0, 2);
+    var dt       = co.date ? new Date(co.date).toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
+    html += '<div class="list-row">' +
+      '<div class="avatar">' + initials + '</div>' +
+      '<div style="flex:1">' +
+        '<div style="font-weight:600;font-size:13px">' + esc(co.chemName) + '</div>' +
+        '<div style="font-size:12px;color:var(--text2)">' + esc(co.user) + (co.amount ? ' · ' + co.amount : '') + (co.purpose ? ' · ' + co.purpose : '') + '</div>' +
+        '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + dt + '</div>' +
+      '</div>' +
+      '<button class="btn sm danger" onclick="deleteCheckout(' + co.id + ')" title="Delete"><i class="ti ti-x" aria-hidden="true"></i></button>' +
+    '</div>';
   });
-  html+='</div>';
-  if(checkouts.length>100) html+='<p style="font-size:11px;color:var(--text3);text-align:center;padding:8px">Showing latest 100 of '+checkouts.length+' entries</p>';
-  document.getElementById('checkoutList').innerHTML=html;
+  html += '</div>';
+  if (checkouts.length > 100) html += '<p style="font-size:11px;color:var(--text3);text-align:center;padding:8px">Showing latest 100 of ' + checkouts.length + ' entries</p>';
+  document.getElementById('checkoutList').innerHTML = html;
 }
-function deleteCheckout(id){ checkouts=checkouts.filter(function(c){return c.id!==id;}); saveCO(); renderCheckout(); }
 
-function renderOrders(){
-  var fd={weekly:7,monthly:30,quarterly:90,biannual:180,annual:365};
-  var with0=chemicals.filter(function(c){return c.freq||c.lastOrder;});
-  if(!with0.length){ document.getElementById('ordersList').innerHTML='<div class="empty-state"><i class="ti ti-refresh" aria-hidden="true"></i><p>Set "Order frequency" and "Last order date" on chemicals to see the reorder schedule.</p></div>'; return; }
-  var now=new Date();
-  var sorted=with0.slice().sort(function(a,b){return dueIn(a,fd,now)-dueIn(b,fd,now);});
-  document.getElementById('ordersList').innerHTML=
-    '<div class="section-head">Reorder schedule — sorted by urgency</div>'+
-    '<div class="list-card">'+
-    sorted.map(function(c){
-      var due=dueIn(c,fd,now);
-      var pct=c.freq?Math.max(0,Math.min(100,100-(due/fd[c.freq]*100))):0;
-      var urg=due<7?'red':due<30?'amber':'green';
-      return '<div class="list-row">'+
-        '<div style="flex:1">'+
-        '<div style="font-weight:600;font-size:13px">'+esc(c.name)+'</div>'+
-        '<div style="font-size:11px;color:var(--text2)">'+esc(c.company||'')+(c.catalog?' · '+c.catalog:'')+(c.freq?' · '+c.freq:'')+'</div>'+
-        '<div class="freq-bar"><div class="freq-fill" style="width:'+Math.round(pct)+'%"></div></div>'+
-        '</div>'+
-        '<div style="text-align:right;margin-left:12px;flex-shrink:0">'+
-        '<span class="badge '+urg+'">'+dueLabel(due)+'</span>'+
-        '<div style="font-size:10px;color:var(--text3);margin-top:3px">Last order: '+(c.lastOrder||'—')+'</div>'+
-        '<div style="font-size:10px;color:var(--text3)">Stock: '+c.stocks+'</div>'+
+function deleteCheckout(id) {
+  checkouts = checkouts.filter(function(c) { return c.id !== id; });
+  saveCO();
+  renderCheckout();
+}
+
+// ── Reorder tracker ───────────────────────────────────────────────────────
+var FREQ_DAYS = { weekly: 7, monthly: 30, quarterly: 90, biannual: 180, annual: 365 };
+
+function renderOrders() {
+  var withOrder = chemicals.filter(function(c) { return c.freq || c.lastOrder; });
+  if (!withOrder.length) {
+    document.getElementById('ordersList').innerHTML =
+      '<div class="empty-state"><i class="ti ti-refresh" aria-hidden="true"></i><p>Set order frequency on chemicals to see the reorder schedule.</p></div>';
+    return;
+  }
+  var now    = new Date();
+  var sorted = withOrder.slice().sort(function(a, b) { return dueIn(a, now) - dueIn(b, now); });
+  document.getElementById('ordersList').innerHTML =
+    '<div class="section-head">Reorder schedule — sorted by urgency</div>' +
+    '<div class="list-card">' +
+    sorted.map(function(c) {
+      var due = dueIn(c, now);
+      var pct = c.freq ? Math.max(0, Math.min(100, 100 - (due / FREQ_DAYS[c.freq] * 100))) : 0;
+      var urg = due < 7 ? 'red' : due < 30 ? 'amber' : 'green';
+      return '<div class="list-row">' +
+        '<div style="flex:1">' +
+          '<div style="font-weight:600;font-size:13px">' + esc(c.name) + '</div>' +
+          '<div style="font-size:11px;color:var(--text2)">' + esc(c.company || '') + (c.catalog ? ' · ' + c.catalog : '') + (c.freq ? ' · ' + c.freq : '') + '</div>' +
+          '<div class="freq-bar"><div class="freq-fill" style="width:' + Math.round(pct) + '%"></div></div>' +
+        '</div>' +
+        '<div style="text-align:right;margin-left:12px;flex-shrink:0">' +
+          '<span class="badge ' + urg + '">' + dueLabel(due) + '</span>' +
+          '<div style="font-size:10px;color:var(--text3);margin-top:3px">Last order: ' + (c.lastOrder || '—') + '</div>' +
+          '<div style="font-size:10px;color:var(--text3)">Stock: ' + c.stocks + '</div>' +
         '</div></div>';
-    }).join('')+'</div>';
-}
-function dueIn(c,fd,now){ if(!c.lastOrder||!c.freq||!fd[c.freq]) return 9999; return Math.round((new Date(c.lastOrder).getTime()+fd[c.freq]*86400000-now)/86400000); }
-function dueLabel(d){ if(d<0) return 'Overdue '+Math.abs(d)+'d'; if(d===0) return 'Due today'; if(d<30) return 'In '+d+'d'; return 'In ~'+Math.round(d/30)+'mo'; }
-
-function populateQRSelect(){
-  document.getElementById('qrSelect').innerHTML='<option value="">Select a chemical...</option>'+chemicals.map(function(c){return '<option value="'+c.id+'">'+esc(c.name)+(c.catalog?' ('+c.catalog+')':'')+'</option>';}).join('');
+    }).join('') + '</div>';
 }
 
-function generateQR(){
-  var id=parseInt(document.getElementById('qrSelect').value);
-  document.getElementById('qrOutput').innerHTML='';
-  if(!id) return;
-  var c=chemicals.find(function(x){return x.id===id;}); if(!c) return;
+// Returns days until next reorder is due (negative = overdue)
+function dueIn(c, now) {
+  if (!c.lastOrder || !c.freq || !FREQ_DAYS[c.freq]) return 9999;
+  return Math.round((new Date(c.lastOrder).getTime() + FREQ_DAYS[c.freq] * 86400000 - now) / 86400000);
+}
+
+function dueLabel(d) {
+  if (d < 0)   return 'Overdue ' + Math.abs(d) + 'd';
+  if (d === 0) return 'Due today';
+  if (d < 30)  return 'In ' + d + 'd';
+  return 'In ~' + Math.round(d / 30) + 'mo';
+}
+
+// ── QR codes ─────────────────────────────────────────────────────────────
+function populateQRSelect() {
+  document.getElementById('qrSelect').innerHTML =
+    '<option value="">Select a chemical...</option>' +
+    chemicals.map(function(c) {
+      return '<option value="' + c.id + '">' + esc(c.name) + (c.catalog ? ' (' + c.catalog + ')' : '') + '</option>';
+    }).join('');
+}
+
+function generateQR() {
+  var id = parseInt(document.getElementById('qrSelect').value);
+  document.getElementById('qrOutput').innerHTML = '';
+  if (!id) return;
+  var c = chemicals.find(function(x) { return x.id === id; });
+  if (!c) return;
   makeQRCard(c, document.getElementById('qrOutput'));
 }
 
-function showQRFor(id){ showTab('qr'); setTimeout(function(){ document.getElementById('qrSelect').value=id; generateQR(); },120); }
+function showQRFor(id) {
+  showTab('qr');
+  setTimeout(function() {
+    document.getElementById('qrSelect').value = id;
+    generateQR();
+  }, 120);
+}
 
-function makeQRCard(c, container){
-  var text='ChemTrack\nName: '+c.name+'\nCAS: '+(c.cas||'—')+'\nCatalog: '+(c.catalog||'—')+'\nCompany: '+(c.company||'—')+'\nLot: '+(c.lot||'—')+'\nAmount: '+(c.amount||'—')+'\nLocation: '+(c.location||'—')+'\nExpiry: '+(c.expiry||'—')+'\nArrival: '+(c.arrival||'—')+'\nID: '+c.id;
-  var card=document.createElement('div'); card.className='qr-card';
-  var qrDiv=document.createElement('div'); qrDiv.id='qr_'+c.id+'_'+Date.now();
-  qrDiv.style.flexShrink='0';
-  card.appendChild(qrDiv);
-  var info=document.createElement('div'); info.className='info';
-  info.innerHTML='<div class="chem-name">'+esc(c.name)+'</div>'+
+// Builds a single QR card (name info + QR code image)
+function makeQRCard(c, container) {
+  var text = 'ChemTrack\nName: ' + c.name + '\nCAS: ' + (c.cas || '—') +
+    '\nCatalog: ' + (c.catalog || '—') + '\nCompany: ' + (c.company || '—') +
+    '\nLot: ' + (c.lot || '—') + '\nAmount: ' + (c.amount || '—') +
+    '\nLocation: ' + (c.location || '—') + '\nExpiry: ' + (c.expiry || '—') +
+    '\nArrival: ' + (c.arrival || '—') + '\nID: ' + c.id;
+
+  var card   = document.createElement('div'); card.className = 'qr-card';
+  var qrDiv  = document.createElement('div'); qrDiv.id = 'qr_' + c.id + '_' + Date.now(); qrDiv.style.flexShrink = '0';
+  var info   = document.createElement('div'); info.className = 'info';
+  info.innerHTML = '<div class="chem-name">' + esc(c.name) + '</div>' +
     [['Company',c.company],['Catalog',c.catalog],['CAS',c.cas],['Lot',c.lot],
      ['Amount',c.amount],['Location',c.location],['Expiry',c.expiry],['Arrival',c.arrival]]
-    .filter(function(r){return r[1];})
-    .map(function(r){return '<div style="margin-bottom:3px"><span style="color:var(--text2)">'+r[0]+':</span> '+esc(r[1])+'</div>';}).join('');
-  card.appendChild(info);
-  container.appendChild(card);
-  try{ new QRCode(qrDiv,{text:text,width:110,height:110,correctLevel:QRCode.CorrectLevel.M}); }catch(e){}
+    .filter(function(r) { return r[1]; })
+    .map(function(r) { return '<div style="margin-bottom:3px"><span style="color:var(--text2)">' + r[0] + ':</span> ' + esc(r[1]) + '</div>'; })
+    .join('');
+
+  card.appendChild(qrDiv); card.appendChild(info); container.appendChild(card);
+  try { new QRCode(qrDiv, { text: text, width: 110, height: 110, correctLevel: QRCode.CorrectLevel.M }); } catch(e) {}
 }
 
-function generateAllQR(){
-  if(!chemicals.length){ notify('No chemicals to generate QR codes for.','error'); return; }
-  var out=document.getElementById('qrOutput'); out.innerHTML='';
-  chemicals.forEach(function(c){ makeQRCard(c, out); });
+function generateAllQR() {
+  if (!chemicals.length) { notify('No chemicals to generate QR codes for.', 'error'); return; }
+  var out = document.getElementById('qrOutput'); out.innerHTML = '';
+  chemicals.forEach(function(c) { makeQRCard(c, out); });
 }
 
-function editChem(id){
-  var c=chemicals.find(function(x){return x.id===id;}); if(!c) return;
+// ── Edit / delete chemical ────────────────────────────────────────────────
+function editChem(id) {
+  var c = chemicals.find(function(x) { return x.id === id; });
+  if (!c) return;
   showTab('add');
-  var map={name:'f_name',company:'f_company',catalog:'f_catalog',cas:'f_cas',lot:'f_lot',amount:'f_amount',stocks:'f_stocks',location:'f_location',arrival:'f_arrival',expiry:'f_expiry',lastOrder:'f_lastorder',notes:'f_notes',openDate:'f_opendate'};
-  Object.keys(map).forEach(function(k){ document.getElementById(map[k]).value=c[k]||''; });
-  document.getElementById('f_freq').value=c.freq||'';
-  document.getElementById('f_opened').checked=!!c.opened;
-  document.getElementById('openDateGroup').style.display=c.opened?'block':'none';
-  deleteChem(id,true);
-  notify('Editing "'+c.name+'" — fill in and resave.','success');
+  var map = { name:'f_name', company:'f_company', catalog:'f_catalog', cas:'f_cas', lot:'f_lot',
+              amount:'f_amount', stocks:'f_stocks', location:'f_location', arrival:'f_arrival',
+              expiry:'f_expiry', lastOrder:'f_lastorder', notes:'f_notes', openDate:'f_opendate' };
+  Object.keys(map).forEach(function(k) { document.getElementById(map[k]).value = c[k] || ''; });
+  document.getElementById('f_freq').value = c.freq || '';
+  document.getElementById('f_opened').checked = !!c.opened;
+  document.getElementById('openDateGroup').style.display = c.opened ? 'block' : 'none';
+  deleteChem(id, true);  // remove old entry silently; re-saved on form submit
+  notify('Editing "' + c.name + '" — fill in and resave.', 'success');
 }
 
-function deleteChem(id,silent){
-  chemicals=chemicals.filter(function(c){return c.id!==id;}); save(); updateCount();
-  if(!silent){ renderTable(); renderStats(); notify('Chemical deleted.','success'); }
+function deleteChem(id, silent) {
+  chemicals = chemicals.filter(function(c) { return c.id !== id; });
+  save(); updateCount();
+  if (!silent) { renderTable(); renderStats(); notify('Chemical deleted.', 'success'); }
 }
 
-function exportCSV(){
-  var h=['Name','Company','Catalog','CAS','Lot','Amount','Stocks','Location','Arrival','Expiry','Opened','Open Date','Last Order','Frequency','Notes'];
-  var rows=chemicals.map(function(c){
-    return [c.name,c.company,c.catalog,c.cas,c.lot,c.amount,c.stocks,c.location,c.arrival,c.expiry,c.opened?'Yes':'No',c.openDate,c.lastOrder,c.freq,c.notes].map(function(v){return '"'+(v||'').toString().replace(/"/g,'""')+'"';}).join(',');
+// ── Export ───────────────────────────────────────────────────────────────
+function exportCSV() {
+  var h    = ['Name','Company','Catalog','CAS','Lot','Amount','Stocks','Location','Arrival','Expiry','Opened','Open Date','Last Order','Frequency','Notes'];
+  var rows = chemicals.map(function(c) {
+    return [c.name,c.company,c.catalog,c.cas,c.lot,c.amount,c.stocks,c.location,
+            c.arrival,c.expiry,c.opened?'Yes':'No',c.openDate,c.lastOrder,c.freq,c.notes]
+      .map(function(v) { return '"' + (v || '').toString().replace(/"/g, '""') + '"'; }).join(',');
   });
-  dl('chemtrack_'+today+'.csv','data:text/csv;charset=utf-8,'+encodeURIComponent([h.join(','),...rows].join('\n')));
+  dl('chemtrack_' + today + '.csv', 'data:text/csv;charset=utf-8,' + encodeURIComponent([h.join(','), ...rows].join('\n')));
 }
 
-function exportJSON(){
-  dl('chemtrack_backup_'+today+'.json','data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify({chemicals:chemicals,checkouts:checkouts},null,2)));
+function exportJSON() {
+  dl('chemtrack_backup_' + today + '.json',
+    'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify({ chemicals, checkouts }, null, 2)));
 }
 
-function dl(name,href){ var a=document.createElement('a'); a.href=href; a.download=name; a.click(); }
+function dl(name, href) { var a = document.createElement('a'); a.href = href; a.download = name; a.click(); }
 
-function clearAll(){
-  if(!confirm('Delete ALL local data? This cannot be undone.')) return;
-  chemicals=[]; checkouts=[]; save(); saveCO(); updateCount(); notify('All local data cleared.','success');
+function clearAll() {
+  if (!confirm('Delete ALL local data? This cannot be undone.')) return;
+  chemicals = []; checkouts = []; save(); saveCO(); updateCount();
+  notify('All local data cleared.', 'success');
 }
 
-async function syncRow(data,action){
-  var url=localStorage.getItem('chemtrack_gsurl'); if(!url) return;
-  try{ await fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:action,data:data})}); }catch(e){}
+// ── Google Sheets sync ───────────────────────────────────────────────────
+// Each save posts a row to the Apps Script web app (fire-and-forget, no-cors)
+async function syncRow(data, action) {
+  var url = localStorage.getItem('chemtrack_gsurl');
+  if (!url) return;
+  try {
+    await fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, data }) });
+  } catch(e) {}
 }
 
-async function syncAll(){
-  var url=localStorage.getItem('chemtrack_gsurl');
-  if(!url){ notify('Connect Google Sheets first.','error'); return; }
-  notify('Syncing '+chemicals.length+' chemicals...','success');
-  for(var i=0;i<chemicals.length;i++){ await syncRow(chemicals[i],'addChem'); }
-  for(var j=0;j<checkouts.length;j++){ await syncRow(checkouts[j],'addCheckout'); }
-  notify('Sync complete!','success');
+// Bulk-sync all local data to Sheets (useful after connecting for the first time)
+async function syncAll() {
+  var url = localStorage.getItem('chemtrack_gsurl');
+  if (!url) { notify('Connect Google Sheets first.', 'error'); return; }
+  notify('Syncing ' + chemicals.length + ' chemicals…', 'success');
+  for (var i = 0; i < chemicals.length; i++) { await syncRow(chemicals[i], 'addChem'); }
+  for (var j = 0; j < checkouts.length; j++) { await syncRow(checkouts[j], 'addCheckout'); }
+  notify('Sync complete!', 'success');
 }
 
-function saveGsUrl(){ var v=document.getElementById('gsUrl').value.trim(); localStorage.setItem('chemtrack_gsurl',v); notify('Sheets URL saved!','success'); updateCount(); }
-function saveApiKey(){ var v=document.getElementById('apiKey').value.trim(); if(v){ localStorage.setItem('chemtrack_apikey',v); notify('API key saved.','success'); } }
-function saveThresh(){ localStorage.setItem('chemtrack_thresh',document.getElementById('expThresh').value); notify('Threshold saved.','success'); updateCount(); }
+// ── Settings persistence ─────────────────────────────────────────────────
+function saveGsUrl()  { localStorage.setItem('chemtrack_gsurl',  document.getElementById('gsUrl').value.trim()); notify('Sheets URL saved!', 'success'); updateCount(); }
+function saveApiKey() { var v = document.getElementById('apiKey').value.trim(); if (v) { localStorage.setItem('chemtrack_apikey', v); notify('API key saved.', 'success'); } }
+function saveThresh() { localStorage.setItem('chemtrack_thresh', document.getElementById('expThresh').value); notify('Threshold saved.', 'success'); updateCount(); }
 
-function loadSettings(){
-  var url=localStorage.getItem('chemtrack_gsurl'); if(url) document.getElementById('gsUrl').value=url;
-  var key=localStorage.getItem('chemtrack_apikey'); if(key) document.getElementById('apiKey').value=key;
-  var t=localStorage.getItem('chemtrack_thresh'); if(t) document.getElementById('expThresh').value=t;
+function loadSettings() {
+  var url    = localStorage.getItem('chemtrack_gsurl');  if (url)    document.getElementById('gsUrl').value    = url;
+  var key    = localStorage.getItem('chemtrack_apikey'); if (key)    document.getElementById('apiKey').value   = key;
+  var thresh = localStorage.getItem('chemtrack_thresh'); if (thresh) document.getElementById('expThresh').value = thresh;
 }
 
-function toggleScript(){
-  var el=document.getElementById('scriptBlock');
-  var btn=document.getElementById('scriptToggleBtn');
-  if(el.style.display==='none'){
-    el.style.display='block'; el.textContent=APPS_SCRIPT;
-    btn.innerHTML='<i class="ti ti-code" aria-hidden="true"></i> Hide script';
+// ── Apps Script code display ─────────────────────────────────────────────
+function toggleScript() {
+  var el  = document.getElementById('scriptBlock');
+  var btn = document.getElementById('scriptToggleBtn');
+  if (el.style.display === 'none') {
+    el.style.display = 'block';
+    el.textContent   = APPS_SCRIPT;
+    btn.innerHTML    = '<i class="ti ti-code" aria-hidden="true"></i> Hide script';
   } else {
-    el.style.display='none';
-    btn.innerHTML='<i class="ti ti-code" aria-hidden="true"></i> Show Apps Script code';
+    el.style.display = 'none';
+    btn.innerHTML    = '<i class="ti ti-code" aria-hidden="true"></i> Show Apps Script code';
   }
 }
 
-var APPS_SCRIPT = `function doPost(e) {
-  var data = JSON.parse(e.postData.contents);
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+// Google Apps Script to paste into Extensions → Apps Script
+// Creates two tabs: "Chemicals" and "Checkout Log"
+var APPS_SCRIPT = 'function doPost(e) {\n' +
+'  var data = JSON.parse(e.postData.contents);\n' +
+'  var ss   = SpreadsheetApp.getActiveSpreadsheet();\n\n' +
+'  if (data.action === "addChem") {\n' +
+'    var sheet = ss.getSheetByName("Chemicals") || ss.insertSheet("Chemicals");\n' +
+'    if (sheet.getLastRow() === 0) {\n' +
+'      sheet.appendRow(["ID","Name","Company","Catalog","CAS","Lot","Amount","Stocks",\n' +
+'        "Location","Arrival","Expiry","Opened","Open Date","Last Order","Frequency","Notes","Added"]);\n' +
+'    }\n' +
+'    var d = data.data || {};\n' +
+'    sheet.appendRow([d.id,d.name,d.company,d.catalog,d.cas,d.lot,d.amount,d.stocks,\n' +
+'      d.location,d.arrival,d.expiry,d.opened?"Yes":"No",d.openDate,\n' +
+'      d.lastOrder,d.freq,d.notes,new Date().toISOString()]);\n' +
+'  }\n\n' +
+'  if (data.action === "addCheckout") {\n' +
+'    var co = ss.getSheetByName("Checkout Log") || ss.insertSheet("Checkout Log");\n' +
+'    if (co.getLastRow() === 0) {\n' +
+'      co.appendRow(["ID","Chemical","User","Amount Used","Date/Time","Purpose","Notes","Logged At"]);\n' +
+'    }\n' +
+'    var c = data.data || {};\n' +
+'    co.appendRow([c.id,c.chemName,c.user,c.amount,c.date,c.purpose,c.notes,new Date().toISOString()]);\n' +
+'  }\n\n' +
+'  return ContentService\n' +
+'    .createTextOutput(JSON.stringify({status:"ok"}))\n' +
+'    .setMimeType(ContentService.MimeType.JSON);\n' +
+'}';
 
-  if (data.action === 'addChem') {
-    var sheet = ss.getSheetByName('Chemicals') || ss.insertSheet('Chemicals');
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow(['ID','Name','Company','Catalog','CAS','Lot','Amount','Stocks',
-        'Location','Arrival','Expiry','Opened','Open Date','Last Order','Frequency','Notes','Added']);
-    }
-    var d = data.data || {};
-    sheet.appendRow([d.id,d.name,d.company,d.catalog,d.cas,d.lot,d.amount,d.stocks,
-      d.location,d.arrival,d.expiry,d.opened?'Yes':'No',d.openDate,
-      d.lastOrder,d.freq,d.notes,new Date().toISOString()]);
+// ════════════════════════════════════════════════════════════════════════
+// CHEMICAL DETAIL MODAL + DATASHEET / SDS LINKS
+// ════════════════════════════════════════════════════════════════════════
+
+var _detailId  = null;   // currently open chemical id
+var _linkCache = {};     // cache: cacheKey → links array (avoids re-fetching)
+
+// Open the detail modal for a given chemical id
+function openDetailModal(id) {
+  var c = chemicals.find(function(x) { return x.id === id; });
+  if (!c) return;
+  _detailId = id;
+
+  // --- Header ---
+  document.getElementById('dm_name').textContent = c.name;
+  var badges = c.opened ? '<span class="badge amber">Opened</span>' : '<span class="badge green">Sealed</span>';
+  var es = expiryStatus(c);
+  if (es === 'expired')  badges += '<span class="badge red">Expired</span>';
+  if (es === 'expiring') badges += '<span class="badge amber">Expiring soon</span>';
+  if (c.stocks <= 0)     badges += '<span class="badge red">Out of stock</span>';
+  else if (c.stocks === 1) badges += '<span class="badge amber">Low stock</span>';
+  document.getElementById('dm_badges').innerHTML = badges;
+
+  // --- Info grid ---
+  var fields = [
+    ['Company', c.company], ['Catalog #', c.catalog],
+    ['CAS',     c.cas],     ['Lot / Batch', c.lot],
+    ['Amount',  c.amount],  ['Stocks',   c.stocks],
+    ['Location',c.location],['Arrival',  c.arrival],
+    ['Expiry',  c.expiry],  ['Open date',c.openDate],
+    ['Last order', c.lastOrder], ['Order freq.', c.freq]
+  ];
+  document.getElementById('dm_info').innerHTML = fields.map(function(f) {
+    if (!f[1] && f[1] !== 0) return '';
+    var mono = ['Catalog #','CAS','Lot / Batch'].indexOf(f[0]) >= 0;
+    return '<div class="detail-item"><div class="k">' + f[0] + '</div>' +
+           '<div class="v' + (mono ? ' mono' : '') + '">' + esc(String(f[1])) + '</div></div>';
+  }).join('');
+
+  // --- Notes ---
+  if (c.notes) {
+    document.getElementById('dm_notes').textContent = c.notes;
+    document.getElementById('dm_notes_wrap').style.display = 'block';
+  } else {
+    document.getElementById('dm_notes_wrap').style.display = 'none';
   }
 
-  if (data.action === 'addCheckout') {
-    var co = ss.getSheetByName('Checkout Log') || ss.insertSheet('Checkout Log');
-    if (co.getLastRow() === 0) {
-      co.appendRow(['ID','Chemical','User','Amount Used','Date/Time','Purpose','Notes','Logged At']);
-    }
-    var c = data.data || {};
-    co.appendRow([c.id,c.chemName,c.user,c.amount,c.date,c.purpose,c.notes,new Date().toISOString()]);
+  // --- Links: show spinner then fetch ---
+  document.getElementById('dm_links').innerHTML =
+    '<span style="font-size:12px;color:var(--text3);display:flex;align-items:center;gap:5px">' +
+    '<span class="spinner" style="width:11px;height:11px;border-width:1.5px"></span> Looking up datasheets…</span>';
+  document.getElementById('dm_links_note').style.display = 'none';
+  document.getElementById('detailModal').classList.add('open');
+
+  fetchLinks(c);
+}
+
+function closeDetailModal() { document.getElementById('detailModal').classList.remove('open'); _detailId = null; }
+document.getElementById('detailModal').addEventListener('click', function(e) { if (e.target === this) closeDetailModal(); });
+
+function editFromDetail()   { var id = _detailId; closeDetailModal(); editChem(id); }
+function deleteFromDetail() { var id = _detailId; if (!confirm('Delete this chemical?')) return; closeDetailModal(); deleteChem(id); }
+
+// Fetch PubChem data + build supplier URLs, then verify and render
+async function fetchLinks(c) {
+  var cacheKey = (c.cas || '') + '|' + (c.catalog || '') + '|' + (c.company || '');
+  if (_linkCache[cacheKey]) { renderLinks(_linkCache[cacheKey]); return; }
+
+  var links = [];
+
+  // ── 1. PubChem lookup by CAS number (verified via real API call) ──────
+  if (c.cas) {
+    try {
+      var pcRes = await fetch(
+        'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/' +
+        encodeURIComponent(c.cas) + '/cids/JSON'
+      );
+      if (pcRes.ok) {
+        var pcData = await pcRes.json();
+        var cid    = pcData.IdentifierList && pcData.IdentifierList.CID && pcData.IdentifierList.CID[0];
+        if (cid) {
+          // PubChem compound page — confirmed to exist via API
+          links.push({ label:'PubChem', icon:'ti-atom', status:'verified',
+            url:  'https://pubchem.ncbi.nlm.nih.gov/compound/' + cid,
+            note: 'Verified via PubChem API — compound page with full GHS/safety data' });
+          // Direct link to the Safety & Hazards anchor on the same page
+          links.push({ label:'SDS (PubChem)', icon:'ti-shield-check', status:'verified',
+            url:  'https://pubchem.ncbi.nlm.nih.gov/compound/' + cid + '#section=Safety-and-Hazards',
+            note: 'Verified — GHS safety & hazard section on PubChem compound page' });
+        }
+      }
+    } catch(e) { /* Network error — skip PubChem silently */ }
+
+    // ECHA — constructed from CAS, may not exist for all substances
+    links.push({ label:'ECHA', icon:'ti-certificate', status:'unverified',
+      url:  'https://echa.europa.eu/substance-information/-/substanceinfo/' + encodeURIComponent(c.cas),
+      note: 'Amber — ECHA URL built from CAS number. May not exist for all chemicals.' });
   }
 
-  return ContentService
-    .createTextOutput(JSON.stringify({status:'ok'}))
-    .setMimeType(ContentService.MimeType.JSON);
-}`;
+  // ── 2. Supplier product pages — built deterministically from catalog # ─
+  var company = (c.company || '').toLowerCase();
+  var cat     = (c.catalog || '').replace(/\s/g, '');
 
-function notify(msg,type){
-  var n=document.createElement('div'); n.className='notif '+type;
-  n.innerHTML='<i class="ti ti-'+(type==='success'?'check':'alert-circle')+'" aria-hidden="true"></i>'+msg;
+  if (cat) {
+    if (company.includes('sigma') || company.includes('merck') || company.includes('aldrich') || company.includes('supelco')) {
+      links.push({ label:'Sigma SDS', icon:'ti-file-description', status:'unverified',
+        url:  'https://www.sigmaaldrich.com/US/en/sds/aldrich/' + cat,
+        note: 'Amber — Sigma-Aldrich SDS URL built from catalog number. Verify the page loads.' });
+      links.push({ label:'Sigma Product', icon:'ti-shopping-cart', status:'unverified',
+        url:  'https://www.sigmaaldrich.com/catalog/product/aldrich/' + cat,
+        note: 'Amber — Sigma-Aldrich product page built from catalog number.' });
+    }
+    if (company.includes('thermo') || company.includes('fisher') || company.includes('invitrogen') || company.includes('gibco')) {
+      links.push({ label:'ThermoFisher SDS', icon:'ti-file-description', status:'unverified',
+        url:  'https://www.thermofisher.com/document-connect/document-connect.html?url=https://assets.thermofisher.com/TFS-Assets/LSG/SDS/' + cat + '_MTR-NALT_EN.pdf',
+        note: 'Amber — ThermoFisher SDS URL. Exact path varies by product; verify manually.' });
+      links.push({ label:'ThermoFisher Product', icon:'ti-shopping-cart', status:'unverified',
+        url:  'https://www.thermofisher.com/order/catalog/product/' + cat,
+        note: 'Amber — ThermoFisher product page built from catalog number.' });
+    }
+    if (company.includes('abcam')) {
+      links.push({ label:'Abcam Product', icon:'ti-shopping-cart', status:'unverified',
+        url:  'https://www.abcam.com/products/' + cat,
+        note: 'Amber — Abcam product page built from catalog number.' });
+    }
+    if (company.includes('cayman')) {
+      links.push({ label:'Cayman Product', icon:'ti-shopping-cart', status:'unverified',
+        url:  'https://www.caymanchem.com/product/' + cat,
+        note: 'Amber — Cayman Chemical product page built from catalog number.' });
+    }
+    if (company.includes('santa cruz') || company.includes('scbt')) {
+      links.push({ label:'Santa Cruz Product', icon:'ti-shopping-cart', status:'unverified',
+        url:  'https://www.scbt.com/p/-' + cat,
+        note: 'Amber — Santa Cruz product page built from catalog number.' });
+    }
+  }
+
+  // ── 3. HEAD-request verification for unverified links ─────────────────
+  // Uses no-cors so CORS headers don't matter; AbortController for 4s timeout.
+  // If the server replies (even opaquely), we keep the link as 'unverified' (amber).
+  // If the request times out or throws a network error, we mark it 'unreachable' and hide it.
+  await Promise.all(
+    links.filter(function(l) { return l.status === 'unverified'; }).map(async function(link) {
+      try {
+        var controller = new AbortController();
+        var timer      = setTimeout(function() { controller.abort(); }, 4000);
+        await fetch(link.url, { method: 'HEAD', mode: 'no-cors', signal: controller.signal });
+        clearTimeout(timer);
+        // Server responded — keep as unverified/amber (content not confirmed)
+      } catch(e) {
+        link.status = e.name === 'AbortError' ? 'timeout' : 'unreachable';
+      }
+    })
+  );
+
+  _linkCache[cacheKey] = links;
+  // Only render if the modal is still open for this chemical
+  if (_detailId !== null) renderLinks(links);
+}
+
+// Render the link buttons into the detail modal
+function renderLinks(links) {
+  var container = document.getElementById('dm_links');
+  var noteEl    = document.getElementById('dm_links_note');
+  if (!container) return;
+
+  // Only show links that are reachable (hide timed-out / unreachable ones)
+  var visible = links.filter(function(l) { return l.status !== 'unreachable' && l.status !== 'timeout'; });
+
+  if (!visible.length) {
+    container.innerHTML = '<span style="font-size:12px;color:var(--text3)">No links found — a CAS number or catalog number is needed for lookup.</span>';
+    noteEl.style.display = 'none';
+    return;
+  }
+
+  container.innerHTML = visible.map(function(l) {
+    var cls       = l.status === 'verified' ? 'verified' : 'unverified';
+    var statusIcon = l.status === 'verified'
+      ? '<i class="ti ti-circle-check" style="font-size:10px" aria-hidden="true"></i>'
+      : '<i class="ti ti-alert-triangle" style="font-size:10px" aria-hidden="true"></i>';
+    return '<a href="' + l.url + '" target="_blank" rel="noopener" class="link-btn ' + cls + '" title="' + esc(l.note || '') + '">' +
+      '<i class="ti ' + l.icon + '" style="font-size:10px" aria-hidden="true"></i> ' + l.label + ' ' + statusIcon + '</a>';
+  }).join('');
+
+  // Show the legend only if there are amber (unverified) links
+  var hasUnverified = visible.some(function(l) { return l.status === 'unverified'; });
+  if (hasUnverified) {
+    noteEl.style.display = 'block';
+    noteEl.innerHTML =
+      '<i class="ti ti-alert-triangle" style="color:var(--amber-text)" aria-hidden="true"></i> ' +
+      '<span style="color:var(--amber-text);font-weight:600">Amber links</span> are built from catalog/CAS numbers — verify the page loads correctly. ' +
+      '<span style="color:var(--green-dark);font-weight:600">Green links</span> are confirmed via the PubChem API.';
+  } else {
+    noteEl.style.display = 'none';
+  }
+}
+
+// ── Toast notification helper ─────────────────────────────────────────────
+function notify(msg, type) {
+  var n = document.createElement('div');
+  n.className = 'notif ' + type;
+  n.innerHTML = '<i class="ti ti-' + (type === 'success' ? 'check' : 'alert-circle') + '" aria-hidden="true"></i>' + msg;
   document.body.appendChild(n);
-  setTimeout(function(){n.style.opacity='0';n.style.transition='opacity .3s';setTimeout(function(){n.remove();},300);},3000);
+  setTimeout(function() {
+    n.style.opacity    = '0';
+    n.style.transition = 'opacity .3s';
+    setTimeout(function() { n.remove(); }, 300);
+  }, 3000);
 }
 
-function esc(s){ return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):''; }
+// ── HTML escape helper ────────────────────────────────────────────────────
+function esc(s) {
+  return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : '';
+}
 
+// ── Initialise ────────────────────────────────────────────────────────────
 updateCount();
 </script>
 </body>
