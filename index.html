@@ -6,8 +6,13 @@
 <title>ChemTrack Lab — Chemical Inventory Manager</title>
 <!-- Tabler Icons CDN -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
-<!-- QRCode.js CDN -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- QR Code: try CDN first, fall back silently - makeQRCard uses img API fallback -->
+<script>
+/* QR rendering uses the goqr.me public API which works from any origin.
+   No local library needed - each QR is an <img> pointing to the API.
+   Works from file://, GitHub Pages, or any server. */
+var QRCode = null; // placeholder - we use our own makeQRCard below
+</script>
 <style>
   /* ── CSS Variables (Light & Dark theme) ─────────────────────────────── */
   :root {
@@ -1174,26 +1179,66 @@ function showQRFor(id) {
   }, 120);
 }
 
-// Builds a single QR card (name info + QR code image)
+// Build a single QR card using the goqr.me public API.
+// This generates a QR <img> that works from file://, GitHub Pages, or any server.
+// The API URL encodes all chemical info into the QR matrix.
 function makeQRCard(c, container) {
-  var text = 'ChemTrack\nName: ' + c.name + '\nCAS: ' + (c.cas || '—') +
-    '\nCatalog: ' + (c.catalog || '—') + '\nCompany: ' + (c.company || '—') +
-    '\nLot: ' + (c.lot || '—') + '\nAmount: ' + (c.amount || '—') +
-    '\nLocation: ' + (c.location || '—') + '\nExpiry: ' + (c.expiry || '—') +
-    '\nArrival: ' + (c.arrival || '—') + '\nID: ' + c.id;
+  // Encode key chemical info as plain text inside the QR
+  var lines = [
+    'ChemTrack Lab', 'Name: ' + (c.name||''),
+    'CAS: '    + (c.cas||'—'),
+    'Catalog: '+ (c.catalog||'—'),
+    'Company: '+ (c.company||'—'),
+    'Lot: '    + (c.lot||'—'),
+    'Amount: ' + (c.amount||'—'),
+    'Location: '+ (c.location||'—'),
+    'Expiry: ' + (c.expiry||'—'),
+    'Arrival: '+ (c.arrival||'—'),
+    'ID: '     + c.id
+  ];
+  var text = lines.join('\n');
 
-  var card   = document.createElement('div'); card.className = 'qr-card';
-  var qrDiv  = document.createElement('div'); qrDiv.id = 'qr_' + c.id + '_' + Date.now(); qrDiv.style.flexShrink = '0';
-  var info   = document.createElement('div'); info.className = 'info';
+  // goqr.me public QR API — free, no key needed, works cross-origin
+  var apiUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&ecc=M&data='
+    + encodeURIComponent(text);
+
+  // Build card
+  var card = document.createElement('div');
+  card.className = 'qr-card';
+  card.style.pageBreakInside = 'avoid';
+
+  // QR image (from API)
+  var imgWrap = document.createElement('div');
+  imgWrap.style.cssText = 'flex-shrink:0;width:120px;height:120px;background:var(--bg2);border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center';
+  var img = document.createElement('img');
+  img.src = apiUrl;
+  img.width = 120; img.height = 120;
+  img.alt = 'QR code for ' + c.name;
+  img.style.cssText = 'display:block;border-radius:4px';
+  img.onerror = function() {
+    // If API unreachable (offline), show a friendly placeholder
+    imgWrap.innerHTML = '<div style="font-size:10px;color:var(--text3);text-align:center;padding:8px">'
+      + '<i class="ti ti-qrcode" style="font-size:28px;display:block;margin-bottom:4px" aria-hidden="true"></i>'
+      + 'QR needs<br>internet</div>';
+  };
+  imgWrap.appendChild(img);
+
+  // Chemical info text
+  var info = document.createElement('div');
+  info.className = 'info';
   info.innerHTML = '<div class="chem-name">' + esc(c.name) + '</div>' +
-    [['Company',c.company],['Catalog',c.catalog],['CAS',c.cas],['Lot',c.lot],
-     ['Amount',c.amount],['Location',c.location],['Expiry',c.expiry],['Arrival',c.arrival]]
+    [['Company', c.company], ['Catalog', c.catalog], ['CAS', c.cas],
+     ['Lot', c.lot], ['Amount', c.amount], ['Location', c.location],
+     ['Expiry', c.expiry], ['Arrival', c.arrival]]
     .filter(function(r) { return r[1]; })
-    .map(function(r) { return '<div style="margin-bottom:3px"><span style="color:var(--text2)">' + r[0] + ':</span> ' + esc(r[1]) + '</div>'; })
-    .join('');
+    .map(function(r) {
+      return '<div style="margin-bottom:3px"><span style="color:var(--text2)">'
+        + r[0] + ':</span> ' + esc(r[1]) + '</div>';
+    }).join('');
 
-  card.appendChild(qrDiv); card.appendChild(info); container.appendChild(card);
-  try { new QRCode(qrDiv, { text: text, width: 110, height: 110, correctLevel: QRCode.CorrectLevel.M }); } catch(e) {}
+  card.appendChild(imgWrap);
+  card.appendChild(info);
+  container.appendChild(card);
 }
 
 function generateAllQR() {
