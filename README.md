@@ -52,7 +52,15 @@ The Expiry tab flags anything expiring within 90 days (adjustable) so you can re
 For the physical bottles, use the QR tab to print labels — stick one on each bottle, and anyone can scan it with their phone camera to instantly see all the chemical's details.
 
 
-## For duplicates, it will trigger:
+### Chemical handling
+Be sure to review the **chemical datasheet and Safety Data Sheet (SDS)** before using any chemical. You can find links to the datasheet and SDS from PubChem and ECHA in the information window.
+
+If necessary, you can use **QR code generator**: generates a QR code per chemical containing all its key info. Use "All QR sheet" to print a full page of labels for every bottle at once. There's also a QR icon in the inventory table for quick access per chemical.
+
+Also, there's a **Checkout / use log**: a full log of who used what, how much, when, and for what experiment. Stored locally and syncs to a separate "Checkout Log" tab in Google Sheets.
+
+
+## For duplicates
 - Exact name match — "Ethanol" typed again when "Ethanol" already exists
 - Fuzzy name match — "Ethanol absolute" when "Ethanol" exists, or vice versa
 - CAS number match — same CAS number even if the name is spelled differently
