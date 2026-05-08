@@ -2,11 +2,13 @@
 
 
 ## What this app actually is
+
 It's a self-contained web app that runs entirely in your browser — no server needed. Data is saved locally in your browser's storage, and optionally synced to a shared Google Sheet that your whole team can view.
 
 
 ## Step 1 — Save the app as an HTML file
-To deploy this for real: Download the index.html, save it as it is or change its name (maybe LabInventory.html) on your computer
+
+Download the index.html, save it as it is or change its name (yourLabInventory.html or whatever you would like) on your computer
 That's a fully working app — you can open it in any browser right now
 
 
@@ -40,6 +42,7 @@ If you want everyone to see the live inventory (not just add to it), just share 
 
 
 ## Day-to-day workflow for your team
+
 When a new chemical arrives, one person opens the app, takes 1–4 photos of the label, hits "Identify with AI," reviews the auto-filled fields, and clicks Save. That's about 30 seconds per chemical.
 
 When someone takes a chemical from the shelf, they go to the Checkout log tab, hit "Log usage," pick the chemical, enter their name and how much they used. This keeps a full audit trail of who used what.
