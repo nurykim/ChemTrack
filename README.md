@@ -1,4 +1,4 @@
-# LabInventory: Lab inventory management 
+# ChemTrack: Lab inventory management 
 
 
 ## What this app actually is
