@@ -73,8 +73,8 @@ Also, there's a **Checkout / use log**: a full log of who used what, how much, w
 - Save as new entry anyway — bypasses the warning and saves it as a separate entry (useful for same chemical from different suppliers or different grades)
 
 ### Notes
-- Remember to check regularly for proper management
-- As you might have noticed, this app can be used to manage anything (there won't be pubchem and sds but will work anyway)
+- Remember to check regularly for proper management of stocks
+- As you might have noticed, this app can be used to manage anything by anyone (there won't be pubchem and sds but will work anyway)
 
 ---
 ### coded by Claude.ai
