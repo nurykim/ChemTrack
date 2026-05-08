@@ -1,4 +1,4 @@
-# ChemTrack: Lab inventory management 
+# ChemTrack: Lab inventory management by Claude.ai
 
 
 ## What this app actually is
@@ -72,5 +72,3 @@ Also, there's a **Checkout / use log**: a full log of who used what, how much, w
 - Add stock to existing — increments the stock count on the existing entry (also updates lot/arrival/expiry from the new scan if provided), then discards the duplicate form
 - Save as new entry anyway — bypasses the warning and saves it as a separate entry (useful for same chemical from different suppliers or different grades)
 
-
-### coded by Claude.ai
