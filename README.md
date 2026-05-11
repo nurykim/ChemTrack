@@ -3,7 +3,7 @@
 
 ## What this app actually is
 
-It's a self-contained web app that runs entirely in your browser — no server needed. Data is saved locally in your browser's storage, and optionally synced to a shared Google Sheet that your whole team can view.
+It's a self-contained web app that runs entirely in your browser — with google sheet. Data is saved in your google sheet that your whole team can view.
 
 
 ## Step 1 — Save the app as an HTML file
