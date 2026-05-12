@@ -347,6 +347,11 @@ var QRCode = null; // placeholder - we use our own makeQRCard below
       <div class="tbl-wrap" id="tableWrap">
         <div class="empty-state"><i class="ti ti-flask" aria-hidden="true"></i><p>No chemicals yet. Use the Add tab to get started.</p></div>
       </div>
+      <div style="margin-top:12px;display:flex;justify-content:flex-end">
+        <a id="sheetDirectLink" href="#" target="_blank" rel="noopener" class="btn" style="display:none">
+          <i class="ti ti-table" aria-hidden="true"></i> Open in Google Sheets
+        </a>
+      </div>
     </div>
 
     <!-- ════════════════════════════════════════════════════════════════
@@ -421,6 +426,13 @@ var QRCode = null; // placeholder - we use our own makeQRCard below
         </div>
       </div>
 
+      <div class="card" style="margin-top:10px">
+        <h4><i class="ti ti-external-link" aria-hidden="true"></i> Google Sheet direct URL</h4>
+        <p>The direct link to your spreadsheet (e.g. <code>docs.google.com/spreadsheets/d/...</code>). Used for the "Open in Google Sheets" button in the Inventory tab.</p>
+        <div style="margin-bottom:10px"><input id="sheetDirectUrl" type="url" placeholder="https://docs.google.com/spreadsheets/d/..."></div>
+        <button class="btn primary" onclick="saveSheetDirectUrl()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save</button>
+      </div>
+
       <div class="section-head" style="margin-top:16px">Google Sheets setup guide</div>
       <div class="card">
         <p style="line-height:2.1">
@@ -428,7 +440,7 @@ var QRCode = null; // placeholder - we use our own makeQRCard below
           <span class="step-num">2</span> Go to <strong>Extensions → Apps Script</strong><br>
           <span class="step-num">3</span> Delete any existing code → paste the script below<br>
           <span class="step-num">4</span> Click <strong>Deploy → New deployment → Web app</strong><br>
-          <span class="step-num">5</span> Execute as: <strong>Me</strong> &nbsp;|&nbsp; Who has access: <strong>with Google account</strong><br>
+          <span class="step-num">5</span> Execute as: <strong>Me</strong> &nbsp;|&nbsp; Who has access: <strong>Anyone</strong><br>
           <span class="step-num">6</span> Copy the deployment URL → paste above → Connect
         </p>
         <button class="btn" onclick="toggleScript()" id="scriptToggleBtn">
@@ -592,9 +604,10 @@ var today     = new Date().toISOString().slice(0, 10);  // YYYY-MM-DD
 var _isLoading = false;  // prevent concurrent fetches
 
 // ── Settings stored in localStorage (device preferences only) ────────────
-function gsUrl()    { return localStorage.getItem('chemtrack_gsurl')  || ''; }
-function apiKey()   { return localStorage.getItem('chemtrack_apikey') || ''; }
-function getThresh(){ return parseInt(localStorage.getItem('chemtrack_thresh') || '90'); }
+function gsUrl()          { return localStorage.getItem('chemtrack_gsurl')        || ''; }
+function apiKey()         { return localStorage.getItem('chemtrack_apikey')       || ''; }
+function getThresh()      { return parseInt(localStorage.getItem('chemtrack_thresh') || '90'); }
+function sheetDirectUrl() { return localStorage.getItem('chemtrack_sheetdirect')  || ''; }
 
 // ── Tab navigation ───────────────────────────────────────────────────────
 var TABS = ['add', 'inventory', 'expiry', 'checkout', 'orders', 'qr', 'settings'];
@@ -1285,10 +1298,27 @@ function saveThresh() {
   localStorage.setItem('chemtrack_thresh', document.getElementById('expThresh').value);
   notify('Threshold saved.', 'success'); updateCount();
 }
+function saveSheetDirectUrl() {
+  var v = document.getElementById('sheetDirectUrl').value.trim();
+  if (v) {
+    localStorage.setItem('chemtrack_sheetdirect', v);
+    updateSheetButton();
+    notify('Google Sheet URL saved.', 'success');
+  }
+}
+function updateSheetButton() {
+  var url = sheetDirectUrl();
+  var link = document.getElementById('sheetDirectLink');
+  if (!link) return;
+  if (url) { link.href = url; link.style.display = 'inline-flex'; }
+  else      { link.style.display = 'none'; }
+}
 function loadSettings() {
-  var url    = localStorage.getItem('chemtrack_gsurl');  if (url)    document.getElementById('gsUrl').value     = url;
-  var key    = localStorage.getItem('chemtrack_apikey'); if (key)    document.getElementById('apiKey').value    = key;
-  var thresh = localStorage.getItem('chemtrack_thresh'); if (thresh) document.getElementById('expThresh').value = thresh;
+  var url    = localStorage.getItem('chemtrack_gsurl');       if (url)    document.getElementById('gsUrl').value          = url;
+  var key    = localStorage.getItem('chemtrack_apikey');      if (key)    document.getElementById('apiKey').value         = key;
+  var thresh = localStorage.getItem('chemtrack_thresh');      if (thresh) document.getElementById('expThresh').value      = thresh;
+  var direct = localStorage.getItem('chemtrack_sheetdirect'); if (direct) document.getElementById('sheetDirectUrl').value = direct;
+  updateSheetButton();
 }
 
 // ── Apps Script code (new v3 — handles GET + POST) ───────────────────────
@@ -1528,6 +1558,7 @@ function esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
 // Load all data from Google Sheets on startup
 updateCount();
 loadFromSheets();
+updateSheetButton();
 </script>
 </body>
 </html>
