@@ -30,6 +30,7 @@ Click Save (floppy disk icon), then Deploy → New deployment
 Set type to Web app, execute as Me, access to Anyone → click Deploy
 Copy the long URL it gives you
 Back in the app → Setup tab → paste the URL → click Connect
+Copy the sheet url and copy it to the google sheet direct url, hit save
 Click Sync all data now to push any existing chemicals up
 
 From this point, every chemical and every checkout log entry automatically posts a new row to your Google Sheet in real time.
