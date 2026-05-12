@@ -28,7 +28,7 @@ In that spreadsheet, go to Extensions → Apps Script
 Delete any existing code, then paste the Apps Script code shown in the app's Setup tab → "Show Apps Script code"
 Click Save (floppy disk icon), then Deploy → New deployment
 Set type to Web app, execute as Me, access to Anyone → click Deploy
-Copy the long URL it gives you
+Copy the long URL under 'Web App' it gives you
 Back in the app → Setup tab → paste the URL → click Connect
 Copy the sheet url and copy it to the google sheet direct url, hit save
 Click Sync all data now to push any existing chemicals up
@@ -75,8 +75,9 @@ Also, there's a **Checkout / use log**: a full log of who used what, how much, w
 
 ### Notes
 - Regularly check that chemical stocks are being managed properly.
-- Keep the `index.html` file online if you or your teammates need shared access, such as through Google Drive. Changes made to a downloaded local copy will only be visible on your own computer (your Sheets URL, your Anthropic API key, and the expiry threshold). 
-- As you may have noticed, this app can be used by anyone to manage almost anything, like 50ml tubes. PubChem and SDS features may not apply, but the app will still function normally.
+- Keep the `index.html` file online if you or your teammates need shared access, such as through Google Drive. Changes made to a downloaded local copy will only be visible on your own computer (your Sheets URL, your Anthropic API key, and the expiry threshold).
+- Remember: your App script and API key contains personal data. **Treat it like a password**. 
+- As you may have noticed, this app can be used by anyone to manage almost anything, like 50ml tubes or a milk carton in your home fridge. PubChem and SDS features may not apply, but the app will still function normally.
 
 
 ---
