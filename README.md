@@ -40,6 +40,7 @@ From this point, every chemical and every checkout log entry automatically posts
 
 The simplest option is to host the HTML file somewhere your team can reach it. You can put it on Google Drive and share the link (they open it, then "Open with" → browser), or host it for free on GitHub Pages or Netlify by uploading the single file. Anyone with the link opens the same app, and everyone's entries go into the same Google Sheet.
 If you want everyone to see the live inventory (not just add to it), just share the Google Sheet link directly — it's a normal spreadsheet they can filter, sort, and view without needing the app.
+* Keep those three values (Apps Script URL, Sheet URL, API key) somewhere safe like a private note or password manager, so if localStorage gets wiped somehow you can reconnect in under a minute without hunting for them.
 
 
 ## Day-to-day workflow for your team
