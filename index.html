@@ -178,6 +178,14 @@ var QRCode = null; // placeholder - we use our own makeQRCard below
   .link-btn.verified { background: var(--green-light); color: var(--green-dark); border-color: var(--green); }
   .link-btn.unverified { background: var(--amber-light); color: var(--amber-text); border-color: var(--amber-text); }
 
+  /* ── Tag autocomplete ───────────────────────────────────────────────── */
+  .tag-wrap { position: relative; }
+  .tag-suggestions { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg); border: 1px solid var(--border2); border-radius: var(--radius); z-index: 50; max-height: 180px; overflow-y: auto; display: none; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+  .tag-suggestions.open { display: block; }
+  .tag-option { padding: 7px 10px; font-size: 12px; cursor: pointer; transition: background .1s; }
+  .tag-option:hover { background: var(--bg2); }
+  .badge.tag { background: var(--blue-light); color: var(--blue-text); }
+
   /* ── Chemical detail modal ──────────────────────────────────────────── */
   .detail-modal { max-width: 560px; max-height: 88vh; overflow-y: auto; }
   .detail-section { margin-bottom: 14px; }
@@ -299,6 +307,22 @@ var QRCode = null; // placeholder - we use our own makeQRCard below
         <div class="form-group full"><label class="fl">Notes / hazard codes / purity / grade</label>
           <textarea id="f_notes" placeholder="Safety info, purity %, special handling, GHS hazard codes..."></textarea>
         </div>
+        <!-- Tags: three free-text fields with autocomplete suggestions -->
+        <div class="form-group tag-wrap">
+          <label class="fl">Tag 1</label>
+          <input id="f_tag1" placeholder="e.g. Liquid" autocomplete="off" oninput="showTagSuggestions('f_tag1','tagSug1')" onfocus="showTagSuggestions('f_tag1','tagSug1')" onblur="setTimeout(function(){hideTagSuggestions('tagSug1')},150)">
+          <div class="tag-suggestions" id="tagSug1"></div>
+        </div>
+        <div class="form-group tag-wrap">
+          <label class="fl">Tag 2</label>
+          <input id="f_tag2" placeholder="e.g. Flammable" autocomplete="off" oninput="showTagSuggestions('f_tag2','tagSug2')" onfocus="showTagSuggestions('f_tag2','tagSug2')" onblur="setTimeout(function(){hideTagSuggestions('tagSug2')},150)">
+          <div class="tag-suggestions" id="tagSug2"></div>
+        </div>
+        <div class="form-group tag-wrap">
+          <label class="fl">Tag 3</label>
+          <input id="f_tag3" placeholder="e.g. Antibody" autocomplete="off" oninput="showTagSuggestions('f_tag3','tagSug3')" onfocus="showTagSuggestions('f_tag3','tagSug3')" onblur="setTimeout(function(){hideTagSuggestions('tagSug3')},150)">
+          <div class="tag-suggestions" id="tagSug3"></div>
+        </div>
       </div>
 
       <!-- Opened checkbox — reveals open date field when checked -->
@@ -342,6 +366,7 @@ var QRCode = null; // placeholder - we use our own makeQRCard below
           <option value="expired">Expired</option>
           <option value="lowstock">Low stock</option>
         </select>
+        <select id="filterTag" onchange="renderTable()"><option value="">All tags</option></select>
         <button class="btn" onclick="exportCSV()"><i class="ti ti-download" aria-hidden="true"></i> CSV</button>
       </div>
       <div class="tbl-wrap" id="tableWrap">
@@ -833,6 +858,9 @@ function buildChemObj() {
     lastOrder: document.getElementById('f_lastorder').value,
     freq:      document.getElementById('f_freq').value,
     notes:     document.getElementById('f_notes').value.trim(),
+    tag1:      document.getElementById('f_tag1').value.trim(),
+    tag2:      document.getElementById('f_tag2').value.trim(),
+    tag3:      document.getElementById('f_tag3').value.trim(),
     opened:    document.getElementById('f_opened').checked,
     openDate:  document.getElementById('f_opendate').value,
     added:     new Date().toISOString()
@@ -954,7 +982,8 @@ function jumpToInventory(id) {
 // ── Clear form ────────────────────────────────────────────────────────────
 function clearForm() {
   ['f_name','f_company','f_catalog','f_cas','f_lot','f_amount','f_stocks',
-   'f_location','f_arrival','f_expiry','f_lastorder','f_notes','f_opendate']
+   'f_location','f_arrival','f_expiry','f_lastorder','f_notes','f_opendate',
+   'f_tag1','f_tag2','f_tag3']
     .forEach(function(id) { document.getElementById(id).value = ''; });
   document.getElementById('f_freq').value    = '';
   document.getElementById('f_opened').checked = false;
@@ -992,7 +1021,7 @@ function updateCount() {
 }
 
 // ── Inventory rendering ───────────────────────────────────────────────────
-function renderAll() { updateCount(); renderStats(); renderTable(); renderLocFilter(); }
+function renderAll() { updateCount(); renderStats(); renderTable(); renderLocFilter(); renderTagFilter(); }
 
 function renderStats() {
   var opened = chemicals.filter(function(c) { return c.opened; }).length;
@@ -1012,16 +1041,25 @@ function renderLocFilter() {
     locs.map(function(l) { return '<option' + (l===cur?' selected':'') + '>' + l + '</option>'; }).join('');
 }
 
+function renderTagFilter() {
+  var tags = [...new Set(chemicals.flatMap(function(c) { return [c.tag1,c.tag2,c.tag3]; }).filter(Boolean))].sort();
+  var sel  = document.getElementById('filterTag'), cur = sel.value;
+  sel.innerHTML = '<option value="">All tags</option>' +
+    tags.map(function(t) { return '<option' + (t===cur?' selected':'') + '>' + esc(t) + '</option>'; }).join('');
+}
+
 function renderTable() {
   var q   = document.getElementById('searchInput').value.toLowerCase();
   var loc = document.getElementById('filterLoc').value;
   var fs  = document.getElementById('filterStatus').value;
+  var ft  = document.getElementById('filterTag').value;
   var data = chemicals.filter(function(c) {
-    var m  = !q || [c.name,c.cas,c.catalog,c.company,c.location,c.lot].some(function(v){ return v&&v.toLowerCase().includes(q); });
+    var m  = !q || [c.name,c.cas,c.catalog,c.company,c.location,c.lot,c.tag1,c.tag2,c.tag3].some(function(v){ return v&&v.toLowerCase().includes(q); });
     var lm = !loc || c.location === loc;
     var sm = !fs || (fs==='open'&&c.opened)||(fs==='sealed'&&!c.opened)||
              (fs==='expiring'&&expiryStatus(c)==='expiring')||(fs==='expired'&&expiryStatus(c)==='expired')||(fs==='lowstock'&&c.stocks<=1);
-    return m && lm && sm;
+    var tm = !ft || [c.tag1,c.tag2,c.tag3].some(function(t){ return t&&t.toLowerCase()===ft.toLowerCase(); });
+    return m && lm && sm && tm;
   });
   var wrap = document.getElementById('tableWrap');
   if (!data.length) {
@@ -1030,13 +1068,14 @@ function renderTable() {
     return;
   }
   wrap.innerHTML = '<table class="tbl"><thead><tr>' +
-    '<th style="width:20%">Name</th><th style="width:13%">Company</th><th style="width:9%">Catalog</th>' +
-    '<th style="width:9%">CAS</th><th style="width:8%">Amount</th><th style="width:6%">Stock</th>' +
-    '<th style="width:10%">Location</th><th style="width:8%">Arrival</th><th style="width:10%">Expiry</th><th style="width:7%">Actions</th>' +
+    '<th style="width:18%">Name</th><th style="width:12%">Company</th><th style="width:8%">Catalog</th>' +
+    '<th style="width:8%">CAS</th><th style="width:7%">Amount</th><th style="width:5%">Stock</th>' +
+    '<th style="width:9%">Location</th><th style="width:10%">Tags</th><th style="width:7%">Arrival</th><th style="width:9%">Expiry</th><th style="width:7%">Actions</th>' +
     '</tr></thead><tbody>' +
     data.map(function(c) {
       var stb = c.stocks<=0 ? '<span class="badge red">Out</span>' : c.stocks===1 ? '<span class="badge amber">1</span>' : '<span class="badge blue">'+c.stocks+'</span>';
       var opb = c.opened ? '<span class="badge amber" style="font-size:9px;margin-left:3px">Open</span>' : '';
+      var tags = [c.tag1,c.tag2,c.tag3].filter(Boolean).map(function(t){ return '<span class="badge tag">'+esc(t)+'</span>'; }).join(' ');
       return '<tr>' +
         '<td><strong>' + esc(c.name) + '</strong>' + opb + '</td>' +
         '<td>' + esc(c.company||'—') + '</td>' +
@@ -1044,6 +1083,7 @@ function renderTable() {
         '<td style="font-family:monospace;font-size:11px">' + esc(c.cas||'—') + '</td>' +
         '<td>' + esc(c.amount||'—') + '</td><td>' + stb + '</td>' +
         '<td>' + esc(c.location||'—') + '</td>' +
+        '<td>' + (tags||'<span style="color:var(--text3);font-size:11px">—</span>') + '</td>' +
         '<td style="font-size:11px">' + esc(c.arrival||'—') + '</td>' +
         '<td>' + expiryBadge(c) + '</td>' +
         '<td style="white-space:nowrap">' +
@@ -1246,7 +1286,8 @@ function editChem(id) {
   showTab('add');
   var map = { name:'f_name', company:'f_company', catalog:'f_catalog', cas:'f_cas', lot:'f_lot',
               amount:'f_amount', stocks:'f_stocks', location:'f_location', arrival:'f_arrival',
-              expiry:'f_expiry', lastOrder:'f_lastorder', notes:'f_notes', openDate:'f_opendate' };
+              expiry:'f_expiry', lastOrder:'f_lastorder', notes:'f_notes', openDate:'f_opendate',
+              tag1:'f_tag1', tag2:'f_tag2', tag3:'f_tag3' };
   Object.keys(map).forEach(function(k) { document.getElementById(map[k]).value = c[k] || ''; });
   document.getElementById('f_freq').value    = c.freq   || '';
   document.getElementById('f_opened').checked = !!c.opened;
@@ -1271,10 +1312,11 @@ async function deleteChem(id, silent) {
 
 // ── CSV export ────────────────────────────────────────────────────────────
 function exportCSV() {
-  var h    = ['Name','Company','Catalog','CAS','Lot','Amount','Stocks','Location','Arrival','Expiry','Opened','Open Date','Last Order','Frequency','Notes'];
+  var h    = ['Name','Company','Catalog','CAS','Lot','Amount','Stocks','Location','Arrival','Expiry','Opened','Open Date','Last Order','Frequency','Tag1','Tag2','Tag3','Notes'];
   var rows = chemicals.map(function(c) {
     return [c.name,c.company,c.catalog,c.cas,c.lot,c.amount,c.stocks,c.location,
-            c.arrival,c.expiry,c.opened?'Yes':'No',c.openDate,c.lastOrder,c.freq,c.notes]
+            c.arrival,c.expiry,c.opened?'Yes':'No',c.openDate,c.lastOrder,c.freq,
+            c.tag1,c.tag2,c.tag3,c.notes]
       .map(function(v){ return '"'+(v||'').toString().replace(/"/g,'""')+'"'; }).join(',');
   });
   var a = document.createElement('a');
@@ -1351,7 +1393,7 @@ var APPS_SCRIPT = [
 "      return { id:r[0], name:r[1], company:r[2], catalog:r[3], cas:r[4], lot:r[5],",
 "               amount:r[6], stocks:r[7], location:r[8], arrival:r[9], expiry:r[10],",
 "               opened:r[11]==='Yes', openDate:r[12], lastOrder:r[13], freq:r[14],",
-"               notes:r[15], added:r[16] };",
+"               tag1:r[15], tag2:r[16], tag3:r[17], notes:r[18], added:r[19] };",
 "    });",
 "  } else { out.chemicals = []; }",
 "",
@@ -1381,12 +1423,12 @@ var APPS_SCRIPT = [
 "    if (sheet.getLastRow() === 0) {",
 "      sheet.appendRow(['ID','Name','Company','Catalog','CAS','Lot','Amount',",
 "        'Stocks','Location','Arrival','Expiry','Opened','Open Date',",
-"        'Last Order','Frequency','Notes','Added']);",
+"        'Last Order','Frequency','Tag1','Tag2','Tag3','Notes','Added']);",
 "    }",
 "    var d = payload.data;",
 "    var row = [d.id,d.name,d.company,d.catalog,d.cas,d.lot,d.amount,d.stocks,",
 "      d.location,d.arrival,d.expiry,d.opened?'Yes':'No',d.openDate,",
-"      d.lastOrder,d.freq,d.notes,d.added||new Date().toISOString()];",
+"      d.lastOrder,d.freq,d.tag1||'',d.tag2||'',d.tag3||'',d.notes,d.added||new Date().toISOString()];",
 "    // Find existing row by ID and overwrite, or append new row",
 "    var found = findRowById(sheet, d.id);",
 "    if (found > 0) sheet.getRange(found, 1, 1, row.length).setValues([row]);",
@@ -1456,6 +1498,7 @@ function openDetailModal(id) {
   if (es==='expiring') badges += '<span class="badge amber">Expiring soon</span>';
   if (c.stocks<=0)     badges += '<span class="badge red">Out of stock</span>';
   else if (c.stocks===1) badges += '<span class="badge amber">Low stock</span>';
+  [c.tag1,c.tag2,c.tag3].filter(Boolean).forEach(function(t) { badges += '<span class="badge tag">'+esc(t)+'</span>'; });
   document.getElementById('dm_badges').innerHTML = badges;
   var fields = [
     ['Company',c.company],['Catalog #',c.catalog],['CAS',c.cas],['Lot / Batch',c.lot],
@@ -1541,6 +1584,39 @@ function renderLinks(links) {
   var hasUnverified = visible.some(function(l){ return l.status==='unverified'; });
   noteEl.style.display = hasUnverified ? 'block' : 'none';
   if (hasUnverified) noteEl.innerHTML = '<i class="ti ti-alert-triangle" style="color:var(--amber-text)" aria-hidden="true"></i> <span style="color:var(--amber-text);font-weight:600">Amber</span> = URL built from catalog/CAS number — verify manually. <span style="color:var(--green-dark);font-weight:600">Green</span> = confirmed via PubChem API.';
+}
+
+// ── Tag autocomplete ──────────────────────────────────────────────────────
+var TAG_SUGGESTIONS = ['Powder','Liquid','Gas','Solution','Buffer','Antibody','Enzyme',
+  'Kit','Standard','Solvent','Acid','Base','Oxidizer','Flammable','Biological'];
+
+function showTagSuggestions(inputId, sugId) {
+  var inp = document.getElementById(inputId);
+  var box = document.getElementById(sugId);
+  var q   = inp.value.trim().toLowerCase();
+  var matches = TAG_SUGGESTIONS.filter(function(t) {
+    return !q || t.toLowerCase().startsWith(q);
+  });
+  // Also include tags already used in inventory (custom tags)
+  var customTags = [...new Set(chemicals.flatMap(function(c){ return [c.tag1,c.tag2,c.tag3]; }).filter(Boolean))];
+  customTags.forEach(function(t) {
+    if (!matches.find(function(m){ return m.toLowerCase()===t.toLowerCase(); }) &&
+        (!q || t.toLowerCase().startsWith(q))) matches.push(t);
+  });
+  if (!matches.length) { box.classList.remove('open'); return; }
+  box.innerHTML = matches.map(function(t) {
+    return '<div class="tag-option" onmousedown="pickTag(\'' + inputId + '\',\'' + sugId + '\',\'' + esc(t) + '\')">' + esc(t) + '</div>';
+  }).join('');
+  box.classList.add('open');
+}
+
+function hideTagSuggestions(sugId) {
+  document.getElementById(sugId).classList.remove('open');
+}
+
+function pickTag(inputId, sugId, value) {
+  document.getElementById(inputId).value = value;
+  document.getElementById(sugId).classList.remove('open');
 }
 
 // ── Toast notification ────────────────────────────────────────────────────

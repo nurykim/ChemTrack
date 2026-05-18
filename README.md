@@ -41,6 +41,8 @@ Each photo scan costs roughly $0.01–0.03. Set a monthly spend limit in the con
 
 From this point, every chemical and every checkout log entry is saved to your Google Sheet in real time.
 
+> **Updating from an earlier version?** If your Google Sheet already has data, the new Apps Script adds three tag columns (Tag1, Tag2, Tag3) after the Frequency column. Existing rows will have those cells blank — that's fine, the app handles it gracefully.
+
 ### Step 4 — Share with your team
 
 Host `index.html` on **GitHub Pages** or **Netlify** by uploading the single file — free, takes two minutes, gives everyone a stable URL to bookmark. Alternatively, share via Google Drive (open → "Open with" → browser).
@@ -51,26 +53,24 @@ Host `index.html` on **GitHub Pages** or **Netlify** by uploading the single fil
 
 ## Setting up `checkout.html` (for lab members)
 
-This is a stripped-down page for logging chemical usage — no editing, no deleting. Unlike `index.html`, it contains **no sensitive information in the file itself**. Each person enters the connection details once on their own device, and the browser remembers them.
+This page is for logging chemical usage — no editing, no deleting. It contains **no sensitive information in the file itself**. Each person enters the connection details once on their own device, and the browser remembers them.
 
 ### What to send to your team
 
 Share the `checkout.html` file (or a link to it if hosted). Then separately — in a message, email, or Slack — send them:
 
 - **Apps Script URL** (required) — the same URL from Step 3 above
-- **Anthropic API key** (optional) — only needed for AI photo scanning; leave out to have users rely on QR or search
+- **Anthropic API key** (optional) — only needed for AI photo scanning
 
 ### What each person does on first open
 
 1. The **Setup screen** opens automatically on first use
-2. They paste in the Apps Script URL (and optionally the Sheet URL and API key)
+2. They paste in the Apps Script URL (and optionally the API key)
 3. Hit **Save & connect** — done. The browser remembers these values
 
-After first setup, the app opens directly to the log screen every time. The ⚙ icon in the top-right re-opens Setup if needed (e.g. after clearing browser history).
+The ⚙ icon in the top-right re-opens Setup if needed (e.g. after clearing browser history).
 
-### QR scanning note
-
-For QR scanning to work, `checkout.html` must be served over HTTPS. Hosting it on GitHub Pages alongside `index.html` is the easiest option. Photo and search still work from a local file.
+> For **QR scanning** to work, `checkout.html` must be served over HTTPS. Hosting it on GitHub Pages is the easiest option. Photo and search still work from a local file.
 
 ---
 
@@ -78,7 +78,13 @@ For QR scanning to work, `checkout.html` must be served over HTTPS. Hosting it o
 
 ### Adding a new chemical (`index.html`)
 
-Open the **Add tab**, take 1–4 photos of the label, hit **Identify with AI**, review the auto-filled fields, click **Save**. About 30 seconds per chemical.
+Open the **Add tab**, take 1–4 photos of the label, hit **Identify with AI**, review the auto-filled fields, and click **Save**. About 30 seconds per chemical.
+
+**Tags** — each chemical can have up to three tags (Tag 1, Tag 2, Tag 3). Click any tag field to see suggested options, or type your own:
+
+> `Powder` `Liquid` `Gas` `Solution` `Buffer` `Antibody` `Enzyme` `Kit` `Standard` `Solvent` `Acid` `Base` `Oxidizer` `Flammable` `Biological`
+
+Tags are optional — leave them blank if not needed. They appear as blue badges in the inventory table and in the detail modal, and can be filtered using the **All tags** dropdown in the Inventory tab.
 
 If the app detects a possible duplicate (same name, CAS, or catalog number), it asks what to do:
 
@@ -104,7 +110,7 @@ The **Expiry tab** flags chemicals expiring within 90 days (adjustable in Setup)
 
 ### QR labels
 
-Use the **QR tab** to generate and print labels — one per chemical, containing all key info. Stick them on bottles. Anyone can scan with a phone camera. **All QR sheet** prints everything at once.
+Use the **QR tab** to generate and print labels — one per chemical, containing all key info. Stick them on bottles. Anyone can scan with a phone camera. **All QR sheet** prints everything at once. There's also a QR icon in the inventory table for quick access per chemical.
 
 ### Safety
 
