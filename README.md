@@ -123,7 +123,7 @@ Review the **chemical datasheet and Safety Data Sheet (SDS)** before using any c
 - The **Apps Script URL** acts like a shared editor link to your Google Sheet — anyone who has it can read and write your inventory. Treat it like a password.
 - The **Anthropic API key** is tied to your billing. If it leaks, revoke it at [console.anthropic.com](https://console.anthropic.com) and issue a new one.
 - Neither credential is embedded in `checkout.html` — the file itself is safe to share openly. Values are stored in each user's browser localStorage only.
-- There is no login system by design, keeping setup simple for teams of any size (under 100).
+- There is no login system by design, keeping setup simple for teams of any size.
 - The app works for anything with a label, not just chemicals. PubChem and SDS features won't apply to non-chemical items, but everything else functions normally.
 
 ---
