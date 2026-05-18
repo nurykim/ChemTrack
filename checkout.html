@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChemTrack — Log Usage</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+  /* ── CSS Variables ── */
+  :root {
+    --bg: #ffffff; --bg2: #f7f7f6; --bg3: #f0efeb;
+    --text: #1a1a18; --text2: #666660; --text3: #aaa;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+    --green: #1D9E75; --green-light: #E1F5EE; --green-dark: #0F6E56;
+    --amber-light: #FAEEDA; --amber-text: #854F0B;
+    --red-light: #FCEBEB; --red-text: #A32D2D;
+    --blue-light: #E6F1FB; --blue-text: #185FA5;
+    --gray-light: #F1EFE8; --gray-text: #5F5E5A;
+    --radius: 8px; --radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1c; --bg2: #2a2a28; --bg3: #252523;
+      --text: #e8e8e4; --text2: #999990; --text3: #666;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.18);
+      --green-light: #0a3028; --green-dark: #5DCAA5;
+      --amber-light: #2a1f08; --amber-text: #FAC775;
+      --red-light: #2a0f0f; --red-text: #F09595;
+      --blue-light: #0a1e30; --blue-text: #85B7EB;
+      --gray-light: #252523; --gray-text: #B4B2A9;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); font-size: 14px; min-height: 100vh; }
+  .app { max-width: 520px; margin: 0 auto; background: var(--bg); min-height: 100vh; display: flex; flex-direction: column; box-shadow: 0 0 0 0.5px var(--border); }
+
+  /* ── Top bar ── */
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 0.5px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 10; }
+  .logo { display: flex; align-items: center; gap: 9px; font-size: 16px; font-weight: 600; }
+  .logo i { color: var(--green); font-size: 22px; }
+  .logo .sub { font-size: 11px; color: var(--text3); font-weight: 400; }
+
+  /* ── Main content ── */
+  .content { padding: 20px 18px; flex: 1; }
+
+  /* ── Input method tabs ── */
+  .method-tabs { display: flex; gap: 6px; margin-bottom: 20px; }
+  .method-tab { flex: 1; padding: 10px 6px; border: 1px solid var(--border2); border-radius: var(--radius); background: var(--bg2); color: var(--text2); font-size: 12px; font-weight: 500; cursor: pointer; text-align: center; transition: all .15s; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .method-tab i { font-size: 20px; }
+  .method-tab.active { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
+
+  /* ── Cards ── */
+  .card { background: var(--bg2); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 14px; }
+  .card-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; color: var(--text); display: flex; align-items: center; gap: 6px; }
+
+  /* ── Form ── */
+  .form-group { margin-bottom: 12px; }
+  label { display: block; font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 4px; }
+  input, select, textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); font-size: 14px; font-family: inherit; outline: none; transition: border .15s; }
+  input:focus, select:focus, textarea:focus { border-color: var(--green); }
+  textarea { resize: vertical; min-height: 60px; }
+
+  /* ── Buttons ── */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--bg2); color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; transition: all .15s; }
+  .btn:hover { background: var(--bg3); }
+  .btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
+  .btn.primary:hover { background: var(--green-dark); }
+  .btn.full { width: 100%; justify-content: center; padding: 12px; font-size: 14px; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* ── Chemical result card ── */
+  .chem-result { background: var(--green-light); border: 1px solid var(--green); border-radius: var(--radius-lg); padding: 14px; margin-bottom: 14px; display: none; }
+  .chem-result.visible { display: block; }
+  .chem-name { font-size: 16px; font-weight: 700; color: var(--green-dark); margin-bottom: 6px; }
+  .chem-meta { font-size: 12px; color: var(--text2); line-height: 1.8; }
+  .chem-meta span { color: var(--text); font-weight: 500; }
+
+  /* ── Search results dropdown ── */
+  .search-results { border: 1px solid var(--border2); border-radius: var(--radius); background: var(--bg); max-height: 220px; overflow-y: auto; display: none; margin-top: 2px; }
+  .search-results.open { display: block; }
+  .search-item { padding: 10px 12px; cursor: pointer; border-bottom: 0.5px solid var(--border); transition: background .1s; }
+  .search-item:last-child { border-bottom: none; }
+  .search-item:hover { background: var(--bg2); }
+  .search-item .si-name { font-weight: 600; font-size: 13px; }
+  .search-item .si-meta { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+  /* ── Photo preview ── */
+  .photo-area { border: 2px dashed var(--border2); border-radius: var(--radius-lg); padding: 24px; text-align: center; cursor: pointer; transition: border .15s; color: var(--text2); }
+  .photo-area:hover { border-color: var(--green); color: var(--green-dark); }
+  .photo-area i { font-size: 36px; display: block; margin-bottom: 8px; }
+  .photo-area.has-photo { border-style: solid; border-color: var(--green); }
+  #photoPreview { max-width: 100%; max-height: 200px; border-radius: var(--radius); margin-top: 10px; display: none; }
+
+  /* ── QR scanner ── */
+  #qrVideo { width: 100%; border-radius: var(--radius-lg); display: none; background: #000; }
+  #qrCanvas { display: none; }
+  .qr-status { text-align: center; padding: 10px; font-size: 13px; color: var(--text2); }
+
+  /* ── Notification toast ── */
+  .notif { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); padding: 10px 18px; border-radius: 20px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 7px; z-index: 9999; animation: fadeUp .25s ease; box-shadow: 0 4px 16px rgba(0,0,0,.15); max-width: 90vw; text-align: center; }
+  .notif.success { background: var(--green); color: #fff; }
+  .notif.error   { background: #c0392b; color: #fff; }
+  @keyframes fadeUp { from { opacity:0; transform: translateX(-50%) translateY(10px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+
+  /* ── Help panel ── */
+  .help-panel { display: none; padding: 18px; border-top: 0.5px solid var(--border); font-size: 13px; line-height: 1.7; color: var(--text2); }
+  .help-panel.open { display: block; }
+  .help-panel h4 { color: var(--text); margin-bottom: 8px; font-size: 14px; }
+  .help-panel h5 { color: var(--text); margin: 12px 0 4px; font-size: 13px; }
+
+  /* ── Not configured banner ── */
+  .config-warn { background: var(--amber-light); border: 1px solid var(--amber-text); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 16px; font-size: 13px; color: var(--amber-text); display: none; }
+  .config-warn.visible { display: flex; gap: 10px; align-items: flex-start; }
+
+  /* ── Stock badge ── */
+  .stock-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; background: var(--blue-light); color: var(--blue-text); border-radius: 20px; padding: 2px 8px; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Top bar ── -->
+  <div class="topbar">
+    <div class="logo">
+      <i class="ti ti-flask-2"></i>
+      <div>
+        ChemTrack
+        <div class="sub">Usage log</div>
+      </div>
+    </div>
+    <button class="btn" onclick="toggleHelp()" title="Help &amp; info">
+      <i class="ti ti-info-circle"></i> Help
+    </button>
+  </div>
+
+  <!-- ── Help panel ── -->
+  <div class="help-panel" id="helpPanel">
+    <h4><i class="ti ti-info-circle" style="color:var(--green)"></i> About this app</h4>
+    <p>This is the ChemTrack usage logging page. Use it to record when you take a reagent from the lab inventory. Your entry is saved directly to the shared lab Google Sheet.</p>
+    <h5><i class="ti ti-camera"></i> Photo scan</h5>
+    <p>Take or upload a photo of the bottle label. AI reads the name or CAS number and finds the chemical automatically. Requires an API key configured by your lab manager.</p>
+    <h5><i class="ti ti-qrcode"></i> QR scan</h5>
+    <p>Point your camera at the ChemTrack QR code on the bottle. The chemical is identified instantly — no API key needed.</p>
+    <h5><i class="ti ti-search"></i> Manual search</h5>
+    <p>Type the chemical name or CAS number to search the inventory directly.</p>
+    <h5><i class="ti ti-alert-circle"></i> Something not working?</h5>
+    <p>Contact your lab manager. This page is pre-configured — you don't need to enter any URLs or keys yourself.</p>
+  </div>
+
+  <!-- ── Main content ── -->
+  <div class="content">
+
+    <!-- Config warning (shown if APPS_SCRIPT_URL not set) -->
+    <div class="config-warn" id="configWarn">
+      <i class="ti ti-alert-triangle" style="font-size:20px;flex-shrink:0"></i>
+      <div><strong>Not configured.</strong> This page needs to be set up by the lab manager before use. The Apps Script URL has not been filled in.</div>
+    </div>
+
+    <!-- Step 1: Choose input method -->
+    <div class="card">
+      <div class="card-title"><i class="ti ti-number-1" style="color:var(--green)"></i> Identify the chemical</div>
+      <div class="method-tabs">
+        <div class="method-tab active" id="tab-photo" onclick="switchMethod('photo')">
+          <i class="ti ti-camera"></i> Photo
+        </div>
+        <div class="method-tab" id="tab-qr" onclick="switchMethod('qr')">
+          <i class="ti ti-qrcode"></i> QR scan
+        </div>
+        <div class="method-tab" id="tab-search" onclick="switchMethod('search')">
+          <i class="ti ti-search"></i> Search
+        </div>
+      </div>
+
+      <!-- Photo method -->
+      <div id="method-photo">
+        <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)">
+        <div class="photo-area" id="photoArea" onclick="document.getElementById('photoInput').click()">
+          <i class="ti ti-camera-plus"></i>
+          <div style="font-size:13px;font-weight:500">Tap to take or upload a photo</div>
+          <div style="font-size:11px;margin-top:4px">Point at the bottle label showing name or CAS number</div>
+          <img id="photoPreview">
+        </div>
+        <button class="btn primary full" id="scanBtn" style="margin-top:10px;display:none" onclick="runAIScan()">
+          <i class="ti ti-robot"></i> Scan with AI
+        </button>
+      </div>
+
+      <!-- QR method -->
+      <div id="method-qr" style="display:none">
+        <video id="qrVideo" playsinline autoplay muted></video>
+        <canvas id="qrCanvas"></canvas>
+        <div class="qr-status" id="qrStatus">Initialising camera…</div>
+        <button class="btn full" id="qrStartBtn" onclick="startQR()" style="margin-top:8px">
+          <i class="ti ti-camera"></i> Start camera
+        </button>
+        <button class="btn full" id="qrStopBtn" onclick="stopQR()" style="display:none;margin-top:8px">
+          <i class="ti ti-player-stop"></i> Stop camera
+        </button>
+      </div>
+
+      <!-- Search method -->
+      <div id="method-search" style="display:none">
+        <div class="form-group" style="margin-bottom:0;position:relative">
+          <label>Chemical name or CAS number</label>
+          <input type="text" id="searchInput" placeholder="e.g. Ethanol or 64-17-5" oninput="runSearch()" autocomplete="off">
+          <div class="search-results" id="searchResults"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chemical result -->
+    <div class="chem-result" id="chemResult">
+      <div class="chem-name" id="crName">—</div>
+      <div class="chem-meta" id="crMeta"></div>
+    </div>
+
+    <!-- Step 2: Log details -->
+    <div class="card" id="logCard" style="display:none">
+      <div class="card-title"><i class="ti ti-number-2" style="color:var(--green)"></i> Log details</div>
+      <div class="form-group">
+        <label>Your name *</label>
+        <input type="text" id="co_user" placeholder="First Last">
+      </div>
+      <div class="form-group">
+        <label>Stock # <span style="color:var(--text3);font-weight:400">(which bottle or aliquot)</span></label>
+        <input type="number" id="co_stock" placeholder="e.g. 1" min="1" style="width:120px">
+      </div>
+      <div class="form-group">
+        <label>Amount used</label>
+        <input type="text" id="co_amount" placeholder="e.g. 10 mL, 2 g">
+      </div>
+      <div class="form-group">
+        <label>Date &amp; time</label>
+        <input type="datetime-local" id="co_date">
+      </div>
+      <div class="form-group">
+        <label>Purpose / experiment</label>
+        <input type="text" id="co_purpose" placeholder="e.g. Western blot buffer prep">
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea id="co_notes" placeholder="Observations, remaining amount…"></textarea>
+      </div>
+      <button class="btn primary full" onclick="submitCheckout()">
+        <i class="ti ti-check"></i> Submit log entry
+      </button>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+// ADMIN CONFIGURATION
+// Fill these in before distributing to lab members.
+// Leave ANTHROPIC_API_KEY as '' to disable AI photo scanning.
+// ════════════════════════════════════════════════════════════════════════════
+var CONFIG = {
+  APPS_SCRIPT_URL:   '',   // e.g. 'https://script.google.com/macros/s/.../exec'
+  SHEET_URL:         '',   // e.g. 'https://docs.google.com/spreadsheets/d/...'
+  ANTHROPIC_API_KEY: ''    // e.g. 'sk-ant-api03-...' — leave '' to disable AI scan
+};
+// ════════════════════════════════════════════════════════════════════════════
+
+var chemicals     = [];   // fetched from Sheets on load
+var selectedChem  = null; // the chemical the user has identified
+var photoBase64   = null; // staged photo for AI scan
+var qrStream      = null; // camera stream for QR scanning
+var qrAnimFrame   = null; // requestAnimationFrame handle
+
+// ── Init ──────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', function() {
+  // Check config
+  if (!CONFIG.APPS_SCRIPT_URL) {
+    document.getElementById('configWarn').classList.add('visible');
+    return;
+  }
+  // Set default datetime to now
+  var now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  document.getElementById('co_date').value = now.toISOString().slice(0, 16);
+  // Load inventory
+  loadInventory();
+});
+
+// ── Load inventory from Sheets ────────────────────────────────────────────
+async function loadInventory() {
+  try {
+    var res  = await fetch(CONFIG.APPS_SCRIPT_URL + '?action=getAll', { method: 'GET' });
+    var data = await res.json();
+    chemicals = data.chemicals || [];
+  } catch(e) {
+    notify('Could not load inventory: ' + e.message, 'error');
+  }
+}
+
+// ── Method switching ──────────────────────────────────────────────────────
+var currentMethod = 'photo';
+function switchMethod(m) {
+  ['photo','qr','search'].forEach(function(x) {
+    document.getElementById('method-' + x).style.display = x === m ? 'block' : 'none';
+    document.getElementById('tab-' + x).classList.toggle('active', x === m);
+  });
+  if (currentMethod === 'qr' && m !== 'qr') stopQR();
+  currentMethod = m;
+  clearSelection();
+}
+
+// ── Chemical selection ────────────────────────────────────────────────────
+function selectChem(chem) {
+  selectedChem = chem;
+  var stocks = parseInt(chem.stocks) || 1;
+  var meta =
+    (chem.cas      ? 'CAS: <span>' + esc(chem.cas)      + '</span> &nbsp;' : '') +
+    (chem.company  ? 'Company: <span>' + esc(chem.company)  + '</span> &nbsp;' : '') +
+    (chem.catalog  ? 'Catalog: <span>' + esc(chem.catalog)  + '</span> &nbsp;' : '') +
+    (chem.location ? 'Location: <span>' + esc(chem.location) + '</span>' : '');
+  document.getElementById('crName').textContent = chem.name;
+  document.getElementById('crMeta').innerHTML   = meta +
+    '<br><span class="stock-badge"><i class="ti ti-stack-2"></i> ' + stocks + ' stock' + (stocks !== 1 ? 's' : '') + ' available</span>';
+  document.getElementById('chemResult').classList.add('visible');
+  document.getElementById('logCard').style.display = 'block';
+  // Pre-fill stock # to 1 if only one stock
+  if (stocks === 1) document.getElementById('co_stock').value = '1';
+  else document.getElementById('co_stock').value = '';
+  document.getElementById('co_user').focus();
+}
+
+function clearSelection() {
+  selectedChem = null;
+  document.getElementById('chemResult').classList.remove('visible');
+  document.getElementById('logCard').style.display = 'none';
+  photoBase64 = null;
+  document.getElementById('photoPreview').style.display = 'none';
+  document.getElementById('photoArea').classList.remove('has-photo');
+  document.getElementById('scanBtn').style.display = 'none';
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchResults').classList.remove('open');
+}
+
+// ── Photo method ──────────────────────────────────────────────────────────
+function handlePhoto(inp) {
+  if (!inp.files.length) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    photoBase64 = e.target.result;
+    var preview = document.getElementById('photoPreview');
+    preview.src = photoBase64;
+    preview.style.display = 'block';
+    document.getElementById('photoArea').classList.add('has-photo');
+    document.getElementById('scanBtn').style.display = 'flex';
+    clearSelection();
+  };
+  reader.readAsDataURL(inp.files[0]);
+  inp.value = '';
+}
+
+async function runAIScan() {
+  if (!CONFIG.ANTHROPIC_API_KEY) {
+    notify('No API key configured — please use QR scan or manual search.', 'error');
+    return;
+  }
+  if (!photoBase64) { notify('Please take or upload a photo first.', 'error'); return; }
+  document.getElementById('scanBtn').disabled = true;
+  document.getElementById('scanBtn').innerHTML = '<i class="ti ti-loader-2"></i> Scanning…';
+  try {
+    var b64 = photoBase64.split(',')[1];
+    var mime = photoBase64.split(';')[0].split(':')[1] || 'image/jpeg';
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type':      'application/json',
+        'x-api-key':         CONFIG.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model:      'claude-sonnet-4-20250514',
+        max_tokens: 400,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mime, data: b64 } },
+            { type: 'text',  text: 'This is a lab chemical bottle label. Extract the chemical name and CAS number if visible. Reply with only: NAME: <name>\nCAS: <cas or blank>. Nothing else.' }
+          ]
+        }]
+      })
+    });
+    var data = await res.json();
+    var text = (data.content && data.content[0] && data.content[0].text) || '';
+    var nameMatch = text.match(/NAME:\s*(.+)/i);
+    var casMatch  = text.match(/CAS:\s*([0-9\-]+)/i);
+    var name = nameMatch ? nameMatch[1].trim() : '';
+    var cas  = casMatch  ? casMatch[1].trim()  : '';
+    var found = findChemical(name, cas);
+    if (found) {
+      selectChem(found);
+      notify('Chemical identified: ' + found.name, 'success');
+    } else {
+      notify('Chemical not found in inventory. Try manual search.', 'error');
+    }
+  } catch(e) {
+    notify('AI scan failed: ' + e.message, 'error');
+  }
+  document.getElementById('scanBtn').disabled = false;
+  document.getElementById('scanBtn').innerHTML = '<i class="ti ti-robot"></i> Scan with AI';
+}
+
+// ── QR method ─────────────────────────────────────────────────────────────
+function startQR() {
+  var video  = document.getElementById('qrVideo');
+  var status = document.getElementById('qrStatus');
+  document.getElementById('qrStartBtn').style.display = 'none';
+  document.getElementById('qrStopBtn').style.display  = 'flex';
+  status.textContent = 'Starting camera…';
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    .then(function(stream) {
+      qrStream = stream;
+      video.srcObject = stream;
+      video.style.display = 'block';
+      video.onloadedmetadata = function() {
+        video.play();
+        status.textContent = 'Point at a ChemTrack QR code…';
+        scanQRFrame();
+      };
+    })
+    .catch(function(e) {
+      status.textContent = 'Camera error: ' + e.message;
+      document.getElementById('qrStartBtn').style.display = 'flex';
+      document.getElementById('qrStopBtn').style.display  = 'none';
+    });
+}
+
+function stopQR() {
+  if (qrStream) { qrStream.getTracks().forEach(function(t) { t.stop(); }); qrStream = null; }
+  if (qrAnimFrame) { cancelAnimationFrame(qrAnimFrame); qrAnimFrame = null; }
+  var video = document.getElementById('qrVideo');
+  video.style.display = 'none';
+  video.srcObject = null;
+  document.getElementById('qrStartBtn').style.display = 'flex';
+  document.getElementById('qrStopBtn').style.display  = 'none';
+  document.getElementById('qrStatus').textContent = 'Camera stopped.';
+}
+
+function scanQRFrame() {
+  var video  = document.getElementById('qrVideo');
+  var canvas = document.getElementById('qrCanvas');
+  if (!qrStream || video.readyState < 2) { qrAnimFrame = requestAnimationFrame(scanQRFrame); return; }
+  canvas.width  = video.videoWidth;
+  canvas.height = video.videoHeight;
+  var ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  // Use BarcodeDetector if available (modern browsers)
+  if ('BarcodeDetector' in window) {
+    var detector = new BarcodeDetector({ formats: ['qr_code'] });
+    detector.detect(canvas).then(function(codes) {
+      if (codes.length > 0) {
+        handleQRData(codes[0].rawValue);
+      } else {
+        qrAnimFrame = requestAnimationFrame(scanQRFrame);
+      }
+    }).catch(function() { qrAnimFrame = requestAnimationFrame(scanQRFrame); });
+  } else {
+    // Fallback: jsQR from CDN
+    if (window.jsQR) {
+      var code = jsQR(imageData.data, imageData.width, imageData.height);
+      if (code) { handleQRData(code.data); return; }
+    }
+    qrAnimFrame = requestAnimationFrame(scanQRFrame);
+  }
+}
+
+function handleQRData(text) {
+  stopQR();
+  // QR text format: "ID: <number>" somewhere in the text
+  var idMatch = text.match(/ID:\s*(\d+)/i);
+  if (!idMatch) { notify('Not a ChemTrack QR code.', 'error'); return; }
+  var id   = parseInt(idMatch[1]);
+  var chem = chemicals.find(function(c) { return c.id === id; });
+  if (chem) {
+    selectChem(chem);
+    notify('Chemical found: ' + chem.name, 'success');
+  } else {
+    notify('Chemical ID ' + id + ' not found in inventory.', 'error');
+  }
+}
+
+// ── Search method ─────────────────────────────────────────────────────────
+function runSearch() {
+  var q   = document.getElementById('searchInput').value.trim().toLowerCase();
+  var box = document.getElementById('searchResults');
+  clearSelection();
+  if (q.length < 2) { box.classList.remove('open'); return; }
+  var matches = chemicals.filter(function(c) {
+    return (c.name && c.name.toLowerCase().includes(q)) ||
+           (c.cas  && c.cas.toLowerCase().includes(q));
+  }).slice(0, 10);
+  if (!matches.length) {
+    box.innerHTML = '<div class="search-item" style="color:var(--text3)">No matches found.</div>';
+    box.classList.add('open');
+    return;
+  }
+  box.innerHTML = matches.map(function(c, i) {
+    return '<div class="search-item" onclick="pickSearch(' + i + ')">' +
+      '<div class="si-name">' + esc(c.name) + '</div>' +
+      '<div class="si-meta">' + (c.cas ? 'CAS ' + esc(c.cas) : '') + (c.location ? ' · ' + esc(c.location) : '') + '</div>' +
+      '</div>';
+  }).join('');
+  box.classList.add('open');
+  // store matches on box for retrieval
+  box._matches = matches;
+}
+
+function pickSearch(i) {
+  var box = document.getElementById('searchResults');
+  var chem = box._matches && box._matches[i];
+  if (!chem) return;
+  document.getElementById('searchInput').value = chem.name;
+  box.classList.remove('open');
+  selectChem(chem);
+}
+
+// ── Find chemical by name/CAS (for AI scan result) ────────────────────────
+function findChemical(name, cas) {
+  var nl = name.toLowerCase();
+  var cl = (cas || '').toLowerCase();
+  // Try CAS first (more precise)
+  if (cl) {
+    var byCas = chemicals.find(function(c) { return c.cas && c.cas.toLowerCase() === cl; });
+    if (byCas) return byCas;
+  }
+  // Try exact name match
+  if (nl) {
+    var byName = chemicals.find(function(c) { return c.name && c.name.toLowerCase() === nl; });
+    if (byName) return byName;
+  }
+  // Try partial name match
+  if (nl.length > 3) {
+    var partial = chemicals.find(function(c) { return c.name && c.name.toLowerCase().includes(nl); });
+    if (partial) return partial;
+  }
+  return null;
+}
+
+// ── Submit checkout ───────────────────────────────────────────────────────
+async function submitCheckout() {
+  if (!selectedChem) { notify('Please identify a chemical first.', 'error'); return; }
+  var user = document.getElementById('co_user').value.trim();
+  if (!user) { notify('Please enter your name.', 'error'); return; }
+
+  var co = {
+    id:       Date.now(),
+    chemId:   selectedChem.id,
+    chemName: selectedChem.name,
+    user:     user,
+    stock:    document.getElementById('co_stock').value.trim(),
+    amount:   document.getElementById('co_amount').value.trim(),
+    date:     document.getElementById('co_date').value,
+    purpose:  document.getElementById('co_purpose').value.trim(),
+    notes:    document.getElementById('co_notes').value.trim()
+  };
+
+  var submitBtn = document.querySelector('[onclick="submitCheckout()"]');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="ti ti-loader-2"></i> Saving…';
+
+  try {
+    await fetch(CONFIG.APPS_SCRIPT_URL, {
+      method:  'POST',
+      mode:    'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ action: 'saveCheckout', data: co })
+    });
+    notify('Usage logged for "' + esc(co.chemName) + '"!', 'success');
+    // Reset form
+    clearSelection();
+    document.getElementById('co_user').value    = '';
+    document.getElementById('co_stock').value   = '';
+    document.getElementById('co_amount').value  = '';
+    document.getElementById('co_purpose').value = '';
+    document.getElementById('co_notes').value   = '';
+    var now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('co_date').value = now.toISOString().slice(0, 16);
+    switchMethod('photo');
+  } catch(e) {
+    notify('Save failed: ' + e.message, 'error');
+  }
+
+  submitBtn.disabled = false;
+  submitBtn.innerHTML = '<i class="ti ti-check"></i> Submit log entry';
+}
+
+// ── Help toggle ───────────────────────────────────────────────────────────
+function toggleHelp() {
+  document.getElementById('helpPanel').classList.toggle('open');
+}
+
+// ── Toast notification ────────────────────────────────────────────────────
+function notify(msg, type) {
+  var n = document.createElement('div');
+  n.className = 'notif ' + type;
+  n.innerHTML = '<i class="ti ti-' + (type === 'success' ? 'check' : 'alert-circle') + '"></i>' + msg;
+  document.body.appendChild(n);
+  setTimeout(function() { if (n.parentNode) n.parentNode.removeChild(n); }, 3500);
+}
+
+// ── Escape HTML ───────────────────────────────────────────────────────────
+function esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
+
+// ── Load jsQR as QR fallback ──────────────────────────────────────────────
+(function() {
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>
