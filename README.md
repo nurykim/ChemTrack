@@ -41,7 +41,6 @@ Each photo scan costs roughly $0.01–0.03. Set a monthly spend limit in the con
 
 From this point, every chemical and every checkout log entry is saved to your Google Sheet in real time.
 
-> **Updating from an earlier version?** If your Google Sheet already has data, the new Apps Script adds three tag columns (Tag1, Tag2, Tag3) after the Frequency column. Existing rows will have those cells blank — that's fine, the app handles it gracefully.
 
 ### Step 4 — Share with your team
 
